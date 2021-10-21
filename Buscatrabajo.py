@@ -21,7 +21,8 @@ x = 0
 correct = 0
 me = "www.computrabajo.com.co/empresas/"
 me3 = "https://www.computrabajo.com.co/ofertas-de-trabajo/"
-driver = webdriver.Chrome()
+options = webdriver.ChromeOptions()
+driver = webdriver.Chrome(executable_path=r'E:\OneDrive\Piton\chromedriver.exe', options=options)
 driver.set_window_size(1360, 968)
 
 #Cargar filtros de palabras desde archivo
@@ -36,7 +37,7 @@ driver.get('https://www.elempleo.com/co/ofertas-empleo/bogota')
 time.sleep(1)
 
 #Click Cookies
-driver.find_element_by_xpath('//*[@id="politics_cookieCO"]/div/div[2]/a[2]').click()
+driver.find_element_by_xpath('/html/body/div[10]/div/div[2]/a').click()
 #Click Salario 1-1.5
 driver.find_element_by_xpath('/html/body/div[8]/div[4]/div[2]/div[1]/div/div[1]/div/div[2]/label/input').click()
 time.sleep(2)
