@@ -6,7 +6,9 @@ import math
 import os
 
 #Creación de archivo html
-os.remove(r"./Buscatrabajo/results.html")
+
+if os.path.isfile(r"./Buscatrabajo/results.html"):
+    os.remove(r"./Buscatrabajo/results.html")
 p = open('results.html', 'a')
 head = open(r'./Buscatrabajo/encabezado.txt').read().splitlines()
 for itm in head:
@@ -96,7 +98,7 @@ print ("Filtradas " + str(contador) + " de " + str(total) + " Ofertas!")
 
 ####### COMPUTRABAJO INICIO ##########
 
-head2 = open('encabezado2.txt').read().splitlines()
+head2 = open(r'./Buscatrabajo/encabezado2.txt').read().splitlines()
 for itm in head2:
     p.write(itm + '\n')
 
