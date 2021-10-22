@@ -7,15 +7,21 @@ import os
 
 #Creación de archivo html
 
-if os.path.isfile(r"./Buscatrabajo/results.html"):
-    os.remove(r"./Buscatrabajo/results.html")
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+if os.path.isfile("results.html"):
+    os.remove("results.html")
+
 p = open('results.html', 'a')
-head = open(r'./Buscatrabajo/encabezado.txt').read().splitlines()
+head = open('encabezado.txt').read().splitlines()
+
 for itm in head:
     p.write(itm + '\n')
-linea = open(r'./Buscatrabajo/linea.txt').read()
+
+linea = open('linea.txt').read()
 
 #Inicialización
+
 contador = 0
 total = 0
 sig = 0
@@ -28,14 +34,14 @@ driver = webdriver.Chrome(executable_path=r'E:\OneDrive\Piton\chromedriver.exe',
 driver.set_window_size(1360, 968)
 
 #Cargar filtros de palabras desde archivo
-filtrado = open(r'./Buscatrabajo/filtro.txt').read().splitlines()
+
+filtrado = open('filtro.txt').read().splitlines()
 print ("Filtros: " + str(filtrado))
 print ("\n")
 
 ################ ELEMPLEO INICIO ################
 
 driver.get('https://www.elempleo.com/co/ofertas-empleo/bogota')
-#driver.get('https://www.elempleo.com/co/ofertas-empleo/')
 time.sleep(1)
 
 #Click Cookies
@@ -54,6 +60,7 @@ driver.find_element_by_xpath('/html/body/div[8]/div[4]/div[2]/div[1]/div/div[3]/
 time.sleep(3)
 
 #Calculo de resultados y páginas
+
 numero = int(driver.find_element_by_xpath("/html/body/div[8]/div[2]/div/div/h2/span[1]/strong[3]").text)
 numero = int(math.floor(numero/100))
 print(numero)
@@ -98,7 +105,7 @@ print ("Filtradas " + str(contador) + " de " + str(total) + " Ofertas!")
 
 ####### COMPUTRABAJO INICIO ##########
 
-head2 = open(r'./Buscatrabajo/encabezado2.txt').read().splitlines()
+head2 = open('encabezado2.txt').read().splitlines()
 for itm in head2:
     p.write(itm + '\n')
 
@@ -107,7 +114,6 @@ contador = 0
 total = 0
 
 driver.get('https://www.computrabajo.com.co/ofertas-de-trabajo/')
-#time.sleep(1)
 
 #Cookies no
 driver.find_element_by_xpath('/html/body/div[3]/div[1]/div[2]/div/a[1]').click()
@@ -123,6 +129,7 @@ driver.find_element_by_xpath('/html/body/div[3]/div[4]/div/div[8]/ul/li[1]/span/
 time.sleep(1)
 
 #Calculo de resultados y páginas
+
 numeropunto = driver.find_element_by_xpath("/html/body/div[3]/div[2]/div[2]/header/div/span").text
 numero = int(numeropunto.replace('.', ''))
 numero = math.floor(numero/20)
@@ -164,10 +171,12 @@ while sig <= numero:
 else:
     print ("Terminado filtrado computrabajo.com" +'\n')
 
-#Resultados    
+#Resultados
+    
 print ("Filtradas " + str(contador) + " de " + str(total-correct) + " Ofertas!")
 
 #Cierre
+
 p.close()
 driver.close()
 webbrowser.open("results.html")
