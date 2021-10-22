@@ -6,12 +6,12 @@ import math
 import os
 
 #Creación de archivo html
-os.remove("results.html")
+os.remove(r"./Buscatrabajo/results.html")
 p = open('results.html', 'a')
-head = open('encabezado.txt').read().splitlines()
+head = open(r'./Buscatrabajo/encabezado.txt').read().splitlines()
 for itm in head:
     p.write(itm + '\n')
-linea = open('linea.txt').read()
+linea = open(r'./Buscatrabajo/linea.txt').read()
 
 #Inicialización
 contador = 0
@@ -26,7 +26,7 @@ driver = webdriver.Chrome(executable_path=r'E:\OneDrive\Piton\chromedriver.exe',
 driver.set_window_size(1360, 968)
 
 #Cargar filtros de palabras desde archivo
-filtrado = open('filtro.txt').read().splitlines()
+filtrado = open(r'./Buscatrabajo/filtro.txt').read().splitlines()
 print ("Filtros: " + str(filtrado))
 print ("\n")
 
