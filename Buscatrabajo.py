@@ -1,3 +1,4 @@
+from selenium.webdriver.common.by import By
 from selenium import webdriver
 import webbrowser
 import unidecode
@@ -20,6 +21,17 @@ for itm in head:
 
 linea = open('linea.txt').read()
 
+#Cargar filtros de palabras desde archivo
+
+filtrado = open('filtro.txt').read().splitlines()
+
+#Filtrar Call Center?
+
+col = int(input("Filtrar Call Center? (1=Si 0=No): "))
+if col == 1:
+    filtrado.append('call')
+    filtrado.append('cliente')
+
 #Inicialización
 
 contador = 0
@@ -33,35 +45,29 @@ options = webdriver.ChromeOptions()
 driver = webdriver.Chrome(executable_path=r'E:\OneDrive\Piton\chromedriver.exe', options=options)
 driver.set_window_size(1360, 968)
 
-#Cargar filtros de palabras desde archivo
-
-filtrado = open('filtro.txt').read().splitlines()
-print ("Filtros: " + str(filtrado))
-print ("\n")
-
 ################ ELEMPLEO INICIO ################
 
 driver.get('https://www.elempleo.com/co/ofertas-empleo/bogota')
 time.sleep(1)
 
 #Click Cookies
-driver.find_element_by_xpath('/html/body/div[10]/div/div[2]/a').click()
+driver.find_element(By.XPATH,'/html/body/div[10]/div/div[2]/a').click()
 #Click Salario 1-1.5
-driver.find_element_by_xpath('/html/body/div[8]/div[4]/div[2]/div[1]/div/div[1]/div/div[2]/label/input').click()
+driver.find_element(By.XPATH,'/html/body/div[8]/div[4]/div[2]/div[1]/div/div[1]/div/div[2]/label/input').click()
 time.sleep(2)
 #Click Salario 1.5-2
-driver.find_element_by_xpath('/html/body/div[8]/div[4]/div[2]/div[1]/div/div[1]/div/div[3]/label/input').click()
+driver.find_element(By.XPATH,'/html/body/div[8]/div[4]/div[2]/div[1]/div/div[1]/div/div[3]/label/input').click()
 time.sleep(2)
 #Click Salario 2-2.5
-driver.find_element_by_xpath('/html/body/div[8]/div[4]/div[2]/div[1]/div/div[1]/div/div[4]/label/input').click()
+driver.find_element(By.XPATH,'/html/body/div[8]/div[4]/div[2]/div[1]/div/div[1]/div/div[4]/label/input').click()
 time.sleep(3)
 #Click Fecha
-driver.find_element_by_xpath('/html/body/div[8]/div[4]/div[2]/div[1]/div/div[3]/div/div[2]/label/input').click()
+driver.find_element(By.XPATH,'/html/body/div[8]/div[4]/div[2]/div[1]/div/div[3]/div/div[2]/label/input').click()
 time.sleep(3)
 
 #Calculo de resultados y páginas
 
-numero = int(driver.find_element_by_xpath("/html/body/div[8]/div[2]/div/div/h2/span[1]/strong[3]").text)
+numero = int(driver.find_element(By.XPATH,"/html/body/div[8]/div[2]/div/div/h2/span[1]/strong[3]").text)
 numero = int(math.floor(numero/100))
 print(numero)
 time.sleep(1)
@@ -69,11 +75,11 @@ time.sleep(1)
 while sig <= numero:
     
     #Cargar más resultados
-    driver.find_element_by_xpath("/html/body/div[8]/div[4]/div[1]/div[4]/div/form/div/select/option[3]").click()
+    driver.find_element(By.XPATH,"/html/body/div[8]/div[4]/div[1]/div[4]/div/form/div/select/option[3]").click()
     time.sleep(3)
 
     #Buscar links de las ofertas
-    links = driver.find_elements_by_xpath('//a[contains(@href, "ofertas-trabajo")]')
+    links = driver.find_elements(By.XPATH,'//a[contains(@href, "ofertas-trabajo")]')
 
     #Filtrar ofertas
     for elem in links:
