@@ -31,6 +31,7 @@ col = int(input("Filtrar Call Center? (1=Si 0=No): "))
 if col == 1:
     filtrado.append('call')
     filtrado.append('cliente')
+    filtrado.append('center')
 
 #Inicialización
 
