@@ -1,3 +1,5 @@
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium import webdriver
 import webbrowser
@@ -43,7 +45,12 @@ correct = 0
 me = "www.computrabajo.com.co/empresas/"
 me3 = "https://www.computrabajo.com.co/ofertas-de-trabajo/"
 options = webdriver.ChromeOptions()
-driver = webdriver.Chrome(executable_path=r'E:\OneDrive\Piton\chromedriver.exe', options=options)
+options.add_argument("--log-level=OFF")
+options.add_argument("--ignore-certificate-error")
+options.add_argument("--ignore-ssl-errors")
+s=Service(ChromeDriverManager().install())
+#driver = webdriver.Chrome(executable_path=r'E:\OneDrive\Piton\chromedriver.exe', options=options)
+driver = webdriver.Chrome(service=s, options=options)
 driver.set_window_size(1360, 968)
 
 ################ ELEMPLEO INICIO ################
@@ -120,20 +127,20 @@ sig = 0
 contador = 0
 total = 0
 
-driver.get('https://www.computrabajo.com.co/ofertas-de-trabajo/')
+driver.get('https://www.computrabajo.com.co/empleos-en-bogota-dc?sal=3&pubdate=3')
 
 #Cookies no
 driver.find_element_by_xpath('/html/body/div[3]/div[1]/div[2]/div/a[1]').click()
 time.sleep(1)
 #Ultimos 3 dias
-driver.find_element_by_xpath('/html/body/div[3]/div[4]/div/div[2]/ul/li[3]/span/a').click()
-time.sleep(1)
+#driver.find_element_by_xpath('/html/body/div[3]/div[4]/div/div[2]/ul/li[3]/span/a').click()
+#time.sleep(1)
 #Salario
-driver.find_element_by_xpath('/html/body/div[3]/div[4]/div/div[3]/ul/li[3]/span/a').click()
-time.sleep(1)
+#driver.find_element_by_xpath('/html/body/div[3]/div[4]/div/div[3]/ul/li[3]/span/a').click()
+#time.sleep(1)
 #Ciudad
-driver.find_element_by_xpath('/html/body/div[3]/div[4]/div/div[8]/ul/li[1]/span/a').click()
-time.sleep(1)
+#driver.find_element_by_xpath('/html/body/div[3]/div[4]/div/div[8]/ul/li[1]/span/a').click()
+#time.sleep(1)
 
 #Calculo de resultados y páginas
 
@@ -180,7 +187,7 @@ else:
 
 #Resultados
     
-print ("Filtradas " + str(contador) + " de " + str(total-correct) + " Ofertas!")
+print ("Filtradas " + str(contador) + " de " + str(total-correct) + " Ofertas!" +'\n')
 
 #Cierre
 
