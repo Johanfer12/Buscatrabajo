@@ -145,7 +145,8 @@ time.sleep(1)
 
 #Calculo de resultados y páginas
 
-numeropunto = driver.find_element_by_xpath("/html/body/div[3]/div[2]/div[2]/header/div/span").text
+#numeropunto = driver.find_element_by_xpath("/html/body/div[3]/div[2]/div[2]/header/div/span").text
+numeropunto = driver.find_element(By.XPATH,'//*[@id="MainContainer"]/div[2]/div[2]/header/div/span').text
 numero = int(numeropunto.replace('.', ''))
 numero = math.floor(numero/20)
 print(str(numero) + " Páginas")
