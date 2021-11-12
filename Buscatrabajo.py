@@ -48,11 +48,12 @@ options = webdriver.ChromeOptions()
 options.add_argument("--log-level=OFF")
 options.add_argument("--ignore-certificate-error")
 options.add_argument("--ignore-ssl-errors")
-options.add_experimental_option("excludeSwitches", ["enable-logging"])
+#options.add_argument('--headless')
+options.add_argument('--window-size=1920,1080')
+options.add_argument("--disable-blink-features=AutomationControlled")
 s=Service(ChromeDriverManager().install())
 #driver = webdriver.Chrome(executable_path=r'E:\OneDrive\Piton\chromedriver.exe', options=options)
 driver = webdriver.Chrome(service=s, options=options)
-driver.set_window_size(1360, 968)
 
 ################ ELEMPLEO INICIO ################
 
