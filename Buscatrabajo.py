@@ -158,7 +158,7 @@ while sig <= numero:
     
     #Buscar links de las ofertas
     links = driver.find_elements_by_xpath('//a[contains(@href, "ofertas-de-trabajo")]')
-    print(links)
+
     
     #Filtrar ofertas
     for elem in links:
@@ -197,3 +197,4 @@ print ("Filtradas " + str(contador) + " de " + str(total-correct) + " Ofertas!" 
 p.close()
 driver.close()
 webbrowser.open("results.html")
+time.sleep(300)
