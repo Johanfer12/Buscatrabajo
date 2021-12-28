@@ -52,7 +52,6 @@ options.add_argument("--ignore-ssl-errors")
 options.add_argument('--window-size=1920,1080')
 options.add_argument("--disable-blink-features=AutomationControlled")
 s=Service(ChromeDriverManager().install())
-#driver = webdriver.Chrome(executable_path=r'E:\OneDrive\Piton\chromedriver.exe', options=options)
 driver = webdriver.Chrome(service=s, options=options)
 
 ################ ELEMPLEO INICIO ################
@@ -78,8 +77,9 @@ time.sleep(3)
 #Calculo de resultados y páginas
 
 numero = int(driver.find_element(By.XPATH,"/html/body/div[8]/div[2]/div/div/h2/span[1]/strong[3]").text)
+print (str(numero) + " resultados encontrados" + '\n')
 numero = int(math.floor(numero/100))
-print(numero)
+print(str(numero) + " páginas" + '\n')
 time.sleep(1)
 
 while sig <= numero:
@@ -98,18 +98,18 @@ while sig <= numero:
         res = any(ele in unidecode.unidecode(fullstring.replace('-', ' ').replace('   ', ' ').replace('/', ' ').replace('(', ' ').replace(')', ' ').replace(':', ' ').replace('  ', ' ').replace('*', ' ').lower()) for ele in filtrado)
  
         if res == False:
-            print(elem.get_attribute("title"))
+
             p.write(linea)
             p.write(elem.get_attribute("href") + '">' + elem.get_attribute("title") + "</a></span></p>" +'\n')
             contador += 1
             total += 1
-            print ("\n")
+
         else:
             total += 1
 
     time.sleep(2)
     driver.find_element_by_class_name("js-btn-next").click()
-    print ("Siguiente página." +'\n')
+    print ("Página " + str (sig) + " de " + str(numero) + " filtrada." + "\n")
     time.sleep(2)
     sig +=1 
 
@@ -125,40 +125,33 @@ head2 = open('encabezado2.txt').read().splitlines()
 for itm in head2:
     p.write(itm + '\n')
 
-sig = 0
+sig = 1
 contador = 0
 total = 0
 
 driver.get('https://www.computrabajo.com.co/empleos-en-bogota-dc?sal=3&pubdate=3')
 
-#Cookies no
-driver.find_element_by_xpath('/html/body/div[3]/div[1]/div[2]/div/a[1]').click()
+#Notificaciones no
+driver.find_element_by_xpath('/html/body/main/div[1]/div[2]/div/button[1]').click()
 time.sleep(1)
-#Ultimos 3 dias
-#driver.find_element_by_xpath('/html/body/div[3]/div[4]/div/div[2]/ul/li[3]/span/a').click()
-#time.sleep(1)
-#Salario
-#driver.find_element_by_xpath('/html/body/div[3]/div[4]/div/div[3]/ul/li[3]/span/a').click()
-#time.sleep(1)
-#Ciudad
-#driver.find_element_by_xpath('/html/body/div[3]/div[4]/div/div[8]/ul/li[1]/span/a').click()
-#time.sleep(1)
 
 #Calculo de resultados y páginas
-
-#numeropunto = driver.find_element_by_xpath("/html/body/div[3]/div[2]/div[2]/header/div/span").text
-numeropunto = driver.find_element(By.XPATH,'//*[@id="MainContainer"]/div[2]/div[2]/header/div/span').text
+numeropunto = driver.find_element(By.XPATH,'/html/body/main/div[2]/div[2]/div[1]/div[1]/div[1]/h1/span').text
+print(numeropunto + " Resultados" + "\n")
 numero = int(numeropunto.replace('.', ''))
-numero = math.floor(numero/20)
+print(str(numero) + " Resultados sin punto" + "\n")
+
+if numero%20 == 0:
+    numero = int(numero/20)
+else:
+    numero = int(numero/20) + 1
+
 print(str(numero) + " Páginas")
 
 while sig <= numero:
     
-    sig +=1
-    
     #Buscar links de las ofertas
     links = driver.find_elements_by_xpath('//a[contains(@href, "ofertas-de-trabajo")]')
-
     
     #Filtrar ofertas
     for elem in links:
@@ -168,28 +161,32 @@ while sig <= numero:
         enlace = elem.get_attribute("href")
         
         if res == False and enlace.find(me) == -1 and enlace != me3:
-            print(elem.get_attribute("text"))
+
             p.write(linea)
             p.write(elem.get_attribute("href") + '">' + elem.get_attribute("text") + "</a></span></p>" +'\n')
             total += 1
             contador += 1
-            print ("\n")
+
         elif me in enlace  or enlace is me3:
             x = 1
         else:
             total += 1
 
     time.sleep(2)
-    driver.find_element_by_class_name("siguiente").click()
-    print ("Siguiente página." +'\n')
+
+#Click siguiente
+
+    driver.find_elements_by_xpath('//*[@title="Siguiente"]')[0].click()
+    print ("Página " + str(sig) + " de " + str(numero) + " filtrada." + "\n")
+    sig +=1
     correct += 1
     time.sleep(2)
 
 else:
     print ("Terminado filtrado computrabajo.com" +'\n')
 
-#Resultados
-    
+#Resultados   
+ 
 print ("Filtradas " + str(contador) + " de " + str(total-correct) + " Ofertas!" +'\n')
 
 #Cierre
