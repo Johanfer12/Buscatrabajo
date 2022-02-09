@@ -62,7 +62,7 @@ time.sleep(1)
 #Click Cookies
 driver.find_element(By.XPATH,'/html/body/div[10]/div/div[2]/a').click()
 #Click Salario 1-1.5
-driver.find_element(By.XPATH,'/html/body/div[8]/div[4]/div[2]/div[1]/div/div[1]/div/div[2]/label/input').click()
+#driver.find_element(By.XPATH,'/html/body/div[8]/div[4]/div[2]/div[1]/div/div[1]/div/div[2]/label/input').click()
 time.sleep(2)
 #Click Salario 1.5-2
 driver.find_element(By.XPATH,'/html/body/div[8]/div[4]/div[2]/div[1]/div/div[1]/div/div[3]/label/input').click()
@@ -132,7 +132,7 @@ total = 0
 driver.get('https://www.computrabajo.com.co/empleos-en-bogota-dc?sal=3&pubdate=3')
 
 #Notificaciones no
-driver.find_element_by_xpath('/html/body/main/div[1]/div[2]/div/button[1]').click()
+#driver.find_element_by_xpath('/html/body/main/div[1]/div[2]/div/button[1]').click()
 time.sleep(1)
 
 #Calculo de resultados y páginas
