@@ -32,8 +32,12 @@ filtrado = open('filtro.txt').read().splitlines()
 col = int(input("Filtrar Call Center? (1=Si 0=No): "))
 if col == 1:
     filtrado.append('call')
-    filtrado.append('cliente')
+    #filtrado.append('cliente')
     filtrado.append('center')
+
+#Salario mínimo
+
+sal = int(input("Salario mínimo: 1 = >1m 2 = >1.5m"))
 
 #Inicialización
 
@@ -61,15 +65,20 @@ time.sleep(1)
 
 #Click Cookies
 driver.find_element(By.XPATH,'/html/body/div[10]/div/div[2]/a').click()
+
 #Click Salario 1-1.5
-#driver.find_element(By.XPATH,'/html/body/div[8]/div[4]/div[2]/div[1]/div/div[1]/div/div[2]/label/input').click()
+if sal == 1:
+    driver.find_element(By.XPATH,'/html/body/div[8]/div[4]/div[2]/div[1]/div/div[1]/div/div[2]/label/input').click()
 time.sleep(2)
+
 #Click Salario 1.5-2
 driver.find_element(By.XPATH,'/html/body/div[8]/div[4]/div[2]/div[1]/div/div[1]/div/div[3]/label/input').click()
 time.sleep(2)
+
 #Click Salario 2-2.5
 driver.find_element(By.XPATH,'/html/body/div[8]/div[4]/div[2]/div[1]/div/div[1]/div/div[4]/label/input').click()
 time.sleep(3)
+
 #Click Fecha
 driver.find_element(By.XPATH,'/html/body/div[8]/div[4]/div[2]/div[1]/div/div[3]/div/div[2]/label/input').click()
 time.sleep(3)
@@ -129,7 +138,12 @@ sig = 1
 contador = 0
 total = 0
 
-driver.get('https://www.computrabajo.com.co/empleos-en-bogota-dc?sal=3&pubdate=3')
+#Filtro salario
+
+if sal == 1:
+    driver.get('https://www.computrabajo.com.co/empleos-en-bogota-dc?sal=3&pubdate=3')
+else:
+    driver.get('https://www.computrabajo.com.co/empleos-en-bogota-dc?sal=4&pubdate=3')
 
 #Notificaciones no
 #driver.find_element_by_xpath('/html/body/main/div[1]/div[2]/div/button[1]').click()
