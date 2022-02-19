@@ -1116,3 +1116,6 @@ nativo
 loteria
 archivistica
 protocolo
+coc
+emergencias
+economista
