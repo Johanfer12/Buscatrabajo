@@ -37,7 +37,7 @@ if col == 1:
 
 #Salario mínimo
 
-sal = int(input("Salario mínimo: 1 = >1m 2 = >1.5m"))
+sal = int(input("Salario mínimo: 1 = >1m 2 = >1.5m: "))
 
 #Inicialización
 
@@ -46,6 +46,8 @@ total = 0
 sig = 0
 x = 0
 correct = 0
+tt1 = 0
+tt2 = 0
 me = "www.computrabajo.com.co/empresas/"
 me3 = "https://www.computrabajo.com.co/ofertas-de-trabajo/"
 options = webdriver.ChromeOptions()
@@ -87,6 +89,7 @@ time.sleep(3)
 
 numero = int(driver.find_element(By.XPATH,"/html/body/div[8]/div[2]/div/div/h2/span[1]/strong[3]").text)
 print (str(numero) + " resultados encontrados" + '\n')
+tt1 = numero
 numero = int(math.floor(numero/100))
 print(str(numero) + " páginas" + '\n')
 time.sleep(1)
@@ -127,6 +130,7 @@ else:
     
 #Resultados    
 print ("Filtradas " + str(contador) + " de " + str(total) + " Ofertas!")
+tt2 = contador
 
 ####### COMPUTRABAJO INICIO ##########
 
@@ -154,6 +158,7 @@ numeropunto = driver.find_element(By.XPATH,'/html/body/main/div[2]/div[2]/div[1]
 print(numeropunto + " Resultados" + "\n")
 numero = int(numeropunto.replace('.', ''))
 print(str(numero) + " Resultados sin punto" + "\n")
+tt1 = numero + tt1
 
 if numero%20 == 0:
     numero = int(numero/20)
@@ -202,7 +207,9 @@ else:
 #Resultados   
  
 print ("Filtradas " + str(contador) + " de " + str(total-correct) + " Ofertas!" +'\n')
-
+tt2 = contador + tt2
+print("Total: " + str(tt1) + " Resultados" + '\n')
+print("Filtrados: " + str(tt2) + " Resultados" + '\n')
 #Cierre
 
 p.close()
