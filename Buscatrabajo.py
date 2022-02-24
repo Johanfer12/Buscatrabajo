@@ -202,8 +202,13 @@ while sig <= numero:
         fullstring = elem.get_attribute("text")
         res = any(ele in unidecode.unidecode(fullstring.replace('-', ' ').replace('   ', ' ').replace('/', ' ').replace('(', ' ').replace(')', ' ').replace(':', ' ').replace('  ', ' ').replace('*', ' ').lower()) for ele in filtrado)
         enlace = elem.get_attribute("href")
+
+        #Verificar si url está en eledb, con la condición de no estar en el filtro anterior, para ahorrar procesamiento.
+        if res == False:           
+            
+            res2 = any(enlace in s for s in compdb)
         
-        if res == False and enlace.find(me) == -1 and enlace != me3:
+        if res == False and enlace.find(me) == -1 and enlace != me3 and res2 == False:
 
             p.write(linea)
             p.write(elem.get_attribute("href") + '">' + elem.get_attribute("text") + "</a></span></p>" +'\n')
