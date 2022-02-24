@@ -4,6 +4,8 @@ from selenium.webdriver.common.by import By
 from selenium import webdriver
 import webbrowser
 import unidecode
+import sqlite3
+import shutil
 import time
 import math
 import os
@@ -26,6 +28,21 @@ linea = open('linea.txt').read()
 #Cargar filtros de palabras desde archivo
 
 filtrado = open('filtro.txt').read().splitlines()
+
+#Cargar base de datos navegador para filtrar los ya visitados
+#C:\Users\[Usuario]\AppData\Local\Microsoft\Edge\User Data\Default\History #en el caso de Microsoft Edge#
+
+shutil.copyfile(r"C:\Users\Johan\AppData\Local\Microsoft\Edge\User Data\Default\History", "History.sqlite")
+conn = sqlite3.connect("History.sqlite")
+cursor = conn.cursor()
+
+def consulta_db(empresa):
+    query = "SELECT url FROM urls WHERE url LIKE " + "'%" + empresa + "%'"
+    cursor.execute(query)
+    return cursor.fetchall()
+
+compdb = consulta_db(r"computrabajo.com.co/ofertas-de-trabajo")
+eledb = consulta_db(r"elempleo.com/co/ofertas-trabajo/")
 
 #Filtrar Call Center?
 
@@ -109,7 +126,14 @@ while sig <= numero:
         fullstring = elem.get_attribute("title")
         res = any(ele in unidecode.unidecode(fullstring.replace('-', ' ').replace('   ', ' ').replace('/', ' ').replace('(', ' ').replace(')', ' ').replace(':', ' ').replace('  ', ' ').replace('*', ' ').lower()) for ele in filtrado)
  
+        #Verificar si url está en eledb:
         if res == False:
+            
+            url = elem.get_attribute("href")
+            res2 = any(url in s for s in eledb)
+      
+
+        if res == False and res2 == False:
 
             p.write(linea)
             p.write(elem.get_attribute("href") + '">' + elem.get_attribute("title") + "</a></span></p>" +'\n')
