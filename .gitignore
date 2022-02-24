@@ -118,5 +118,6 @@ dmypy.json
 *.lnk
 *.lnk
 *.lnk
+*.ico
 JobSeeker.lnk
 History.sqlite
