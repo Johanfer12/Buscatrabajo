@@ -80,10 +80,15 @@ driver = webdriver.Chrome(service=s, options=options)
 ################ ELEMPLEO INICIO ################
 
 driver.get('https://www.elempleo.com/co/ofertas-empleo/bogota')
+#driver.get('https://www.elempleo.com/co/ofertas-empleo/')
 time.sleep(1)
 
 #Click Cookies
 driver.find_element(By.XPATH,'/html/body/div[10]/div/div[2]/a').click()
+
+#Arreglo del bug de no resultados
+driver.find_element(By.XPATH,'/html/body/header/div/div[2]/div[2]/div/form/div/button').click()
+driver.back()
 
 #Click Salario 1-1.5
 if sal == 1:

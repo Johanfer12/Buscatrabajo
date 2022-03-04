@@ -121,3 +121,4 @@ dmypy.json
 *.ico
 JobSeeker.lnk
 History.sqlite
+whitelist.txt
