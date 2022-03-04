@@ -119,7 +119,7 @@ time.sleep(1)
 while sig <= numero:
     
     #Cargar más resultados
-    driver.find_element(By.XPATH,"/html/body/div[8]/div[4]/div[1]/div[4]/div/form/div/select/option[3]").click()
+    driver.find_element(By.XPATH,"/html/body/div[8]/div[4]/div[1]/div[3]/div/form/div/select/option[3]").click()
     time.sleep(3)
 
     #Buscar links de las ofertas
