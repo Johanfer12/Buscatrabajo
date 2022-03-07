@@ -68,12 +68,12 @@ tt2 = 0
 me = "www.computrabajo.com.co/empresas/"
 me3 = "https://www.computrabajo.com.co/ofertas-de-trabajo/"
 options = webdriver.ChromeOptions()
-options.add_argument("--log-level=OFF")
+options.add_argument("--log-level=3")
 options.add_argument("--ignore-certificate-error")
 options.add_argument("--ignore-ssl-errors")
-#options.add_argument('--headless')
-options.add_argument('--window-size=1920,1080')
-options.add_argument("--disable-blink-features=AutomationControlled")
+options.add_argument('--headless')
+options.add_argument('--window-size=1280,800')
+#options.add_argument("--disable-blink-features=AutomationControlled")
 s=Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=s, options=options)
 
@@ -149,7 +149,7 @@ while sig <= numero:
             total += 1
 
     time.sleep(2)
-    driver.find_element_by_class_name("js-btn-next").click()
+    driver.find_element(By.CLASS_NAME,"js-btn-next").click()
     print ("Página " + str (sig) + " de " + str(numero) + " filtrada." + "\n")
     time.sleep(2)
     sig +=1 
@@ -189,17 +189,19 @@ numero = int(numeropunto.replace('.', ''))
 print(str(numero) + " Resultados sin punto" + "\n")
 tt1 = numero + tt1
 
-if numero%20 == 0:
-    numero = int(numero/20)
-else:
-    numero = int(numero/20) + 1
+#if numero%20 == 0:
+#    numero = int(numero/20)
+#else:
+#    numero = int(numero/20) + 1
+
+numero = int(math.floor(numero/20))
 
 print(str(numero) + " Páginas")
 
 while sig <= numero:
     
     #Buscar links de las ofertas
-    links = driver.find_elements_by_xpath('//a[contains(@href, "ofertas-de-trabajo")]')
+    links = driver.find_elements(By.XPATH,'//a[contains(@href, "ofertas-de-trabajo")]')
     
     #Filtrar ofertas
     for elem in links:
@@ -229,7 +231,7 @@ while sig <= numero:
 
 #Click siguiente
 
-    driver.find_elements_by_xpath('//*[@title="Siguiente"]')[0].click()
+    driver.find_elements(By.XPATH,'//*[@title="Siguiente"]')[0].click()
     print ("Página " + str(sig) + " de " + str(numero) + " filtrada." + "\n")
     sig +=1
     correct += 1
