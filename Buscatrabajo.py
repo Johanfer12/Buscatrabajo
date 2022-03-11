@@ -8,6 +8,7 @@ import sqlite3
 import shutil
 import time
 import math
+import sys
 import os
 
 #Creación de archivo html
@@ -28,6 +29,18 @@ linea = open('linea.txt').read()
 #Cargar filtros de palabras desde archivo
 
 filtrado = open('filtro.txt').read().splitlines()
+
+#Barra de progreso:
+
+def progress(count, total, status=''):
+    bar_len = 60
+    filled_len = int(round(bar_len * count / float(total)))
+
+    percents = round(100.0 * count / float(total), 1)
+    bar = '=' * filled_len + '-' * (bar_len - filled_len)
+
+    sys.stdout.write('[%s] %s%s ...%s\r' % (bar, percents, '%', status))
+    sys.stdout.flush()
 
 #Cargar base de datos navegador para filtrar los ya visitados
 #C:\Users\[Usuario]\AppData\Local\Microsoft\Edge\User Data\Default\History #en el caso de Microsoft Edge#
@@ -57,7 +70,7 @@ if col == 1:
 sal = int(input("Salario mínimo: 1 = >1m 2 = >1.5m: "))
 
 #Inicialización
-
+print('\n' + "Inicializando...")
 contador = 0
 total = 0
 sig = 0
@@ -110,7 +123,7 @@ time.sleep(3)
 #Calculo de resultados y páginas
 
 numero = int(driver.find_element(By.XPATH,"/html/body/div[8]/div[2]/div/div/h2/span[1]/strong[3]").text)
-print (str(numero) + " resultados encontrados" + '\n')
+print (str(numero) + " resultados encontrados en elempleo.com" + '\n')
 tt1 = numero
 numero = int(math.floor(numero/100))
 print(str(numero) + " páginas" + '\n')
@@ -150,15 +163,16 @@ while sig <= numero:
 
     time.sleep(2)
     driver.find_element(By.CLASS_NAME,"js-btn-next").click()
-    print ("Página " + str (sig) + " de " + str(numero) + " filtrada." + "\n")
+    #print ("Página " + str (sig) + " de " + str(numero) + " filtrada." + "\n")
+    progress(sig, numero, status='Filtrando página: ' + str(sig) + ' de ' + str(numero))
     time.sleep(2)
     sig +=1 
 
 else:
-    print ("Terminado filtrado elempleo.com" +'\n')
+    print ('\n' + "Terminado filtrado elempleo.com" + '\n')
     
 #Resultados    
-print ("Filtradas " + str(contador) + " de " + str(total) + " Ofertas!")
+print ("Filtradas " + str(contador) + " de " + str(total) + " Ofertas!" + '\n')
 tt2 = contador
 
 ####### COMPUTRABAJO INICIO ##########
@@ -184,9 +198,8 @@ time.sleep(1)
 
 #Calculo de resultados y páginas
 numeropunto = driver.find_element(By.XPATH,'/html/body/main/div[2]/div[2]/div[1]/div[1]/div[1]/h1/span').text
-print(numeropunto + " Resultados" + "\n")
+print(numeropunto + " Resultados en Computrabajo: " + "\n")
 numero = int(numeropunto.replace('.', ''))
-print(str(numero) + " Resultados sin punto" + "\n")
 tt1 = numero + tt1
 
 #if numero%20 == 0:
@@ -232,13 +245,14 @@ while sig <= numero:
 #Click siguiente
 
     driver.find_elements(By.XPATH,'//*[@title="Siguiente"]')[0].click()
-    print ("Página " + str(sig) + " de " + str(numero) + " filtrada." + "\n")
+    #print ("Página " + str(sig) + " de " + str(numero) + " filtrada." + "\n")
+    progress(sig, numero, status='Filtrando página: ' + str(sig) + ' de ' + str(numero))
     sig +=1
     correct += 1
     time.sleep(2)
 
 else:
-    print ("Terminado filtrado computrabajo.com" +'\n')
+    print ('\n' + "Terminado filtrado computrabajo.com" +'\n')
 
 #Resultados   
  
