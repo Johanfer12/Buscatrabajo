@@ -70,7 +70,6 @@ if col == 1:
 sal = int(input("Salario mínimo: 1 = >1m 2 = >1.5m: "))
 
 #Inicialización
-print('\n' + "Inicializando...")
 contador = 0
 total = 0
 sig = 0
@@ -86,9 +85,12 @@ options.add_argument("--ignore-certificate-error")
 options.add_argument("--ignore-ssl-errors")
 options.add_argument('--headless')
 options.add_argument('--window-size=1280,800')
+options.add_experimental_option('excludeSwitches', ['enable-logging'])
 #options.add_argument("--disable-blink-features=AutomationControlled")
 s=Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=s, options=options)
+os.system('cls')
+print('\n' + "Inicializando...")
 
 ################ ELEMPLEO INICIO ################
 
@@ -123,6 +125,7 @@ time.sleep(3)
 #Calculo de resultados y páginas
 
 numero = int(driver.find_element(By.XPATH,"/html/body/div[8]/div[2]/div/div/h2/span[1]/strong[3]").text)
+os.system('cls')
 print (str(numero) + " resultados encontrados en elempleo.com" + '\n')
 tt1 = numero
 numero = int(math.floor(numero/100))
