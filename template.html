@@ -1,0 +1,71 @@
+<style>
+
+a {
+  color: ECE0CD;
+  background-color: 2A2B2B;
+  text-decoration: none;
+  font-size:30px;
+}
+
+
+a:link {
+  color: ECE0CD;
+  background-color: 2A2B2B;
+  text-decoration: none;
+}
+
+a:visited {
+  color: pink;
+  background-color: transparent;
+  text-decoration: none;
+}
+
+a:hover {
+  color: red;
+  background-color: transparent;
+  text-decoration: underline;
+}
+
+a:active {
+  color: yellow;
+  background-color: transparent;
+  text-decoration: underline;
+}
+
+ul {
+  list-style: none; /* Remove default bullets */
+}
+
+ul li::before {
+  content: "\2022";
+  color: red;
+  font-size:30px;
+}
+
+h2 {
+  color: ECE0CD;
+  font-size:40px;
+
+</style>
+
+<body style="background-color:#2A2B2B;">
+
+<h1 style="color: #ECE0CD; text-align: center;"><p style="font-size:50px">&iexcl;Mis Resultados</h1>
+ 
+<h2><p>Elempleo</p></h2>
+ 
+</body>
+ 
+<ul>
+{% for result in elemp %}
+   <li <p><a href={{ result[0] }}>{{ result[1] }}</a></p></li>
+{% endfor %}
+</ul>
+
+<h2><p>Computrabajo</p></h2>
+
+<ul>
+{% for result in comput %}
+   <li <p><a href={{ result[0] }}>{{ result[1] }}</a></p></li>
+{% endfor %}
+</ul>
