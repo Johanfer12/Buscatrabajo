@@ -1,5 +1,6 @@
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
+from jinja2 import Environment, FileSystemLoader
 from selenium.webdriver.common.by import By
 from selenium import webdriver
 import webbrowser
@@ -11,21 +12,20 @@ import math
 import sys
 import os
 
-#Creación de archivo html
-
+#directorio local
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-if os.path.isfile("results.html"):
-    os.remove("results.html")
+#Creación de archivo html con Jinja2
+env = Environment( loader = FileSystemLoader(os.path.dirname(os.path.abspath(__file__))) )
+template = env.get_template('template.html')
 
-p = open('results.html', 'a')
-head = open('encabezado.txt').read().splitlines()
-
-for itm in head:
-    p.write(itm + '\n')
-
-linea = open('linea.txt').read()
-
+def page(ele_res,comp_res):
+  filename = ('Resultados.html')
+  with open(filename, 'w') as fh:
+      fh.write(template.render(
+          elemp = ele_res,
+          comput = comp_res,
+      ))
 #Cargar filtros de palabras desde archivo
 
 filtrado = open('filtro.txt').read().splitlines()
@@ -62,7 +62,6 @@ eledb = consulta_db(r"elempleo.com/co/ofertas-trabajo/")
 col = int(input("Filtrar Call Center? (1=Si 0=No): "))
 if col == 1:
     filtrado.append('call')
-    #filtrado.append('cliente')
     filtrado.append('center')
 
 #Salario mínimo
@@ -70,6 +69,8 @@ if col == 1:
 sal = int(input("Salario mínimo: 1 = >1m 2 = >1.5m: "))
 
 #Inicialización
+ele_res = list(tuple())
+comp_res = list(tuple())
 contador = 0
 total = 0
 sig = 0
@@ -81,21 +82,18 @@ me = "www.computrabajo.com.co/empresas/"
 me3 = "https://www.computrabajo.com.co/ofertas-de-trabajo/"
 options = webdriver.ChromeOptions()
 options.add_argument("--log-level=3")
-options.add_argument("--ignore-certificate-error")
 options.add_argument("--ignore-ssl-errors")
+options.add_argument('--ignore-certificate-errors-spki-list')
 options.add_argument('--headless')
 options.add_argument('--window-size=1280,800')
-options.add_experimental_option('excludeSwitches', ['enable-logging'])
-#options.add_argument("--disable-blink-features=AutomationControlled")
 s=Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=s, options=options)
 os.system('cls')
-print('\n' + "Inicializando...")
+print('\n' + " Inicializando...")
 
 ################ ELEMPLEO INICIO ################
 
 driver.get('https://www.elempleo.com/co/ofertas-empleo/bogota')
-#driver.get('https://www.elempleo.com/co/ofertas-empleo/')
 time.sleep(1)
 
 #Click Cookies
@@ -129,7 +127,6 @@ os.system('cls')
 print (str(numero) + " resultados encontrados en elempleo.com" + '\n')
 tt1 = numero
 numero = int(math.floor(numero/100))
-print(str(numero) + " páginas" + '\n')
 time.sleep(1)
 
 while sig <= numero:
@@ -156,8 +153,7 @@ while sig <= numero:
 
         if res == False and res2 == False:
 
-            p.write(linea)
-            p.write(elem.get_attribute("href") + '">' + elem.get_attribute("title") + "</a></span></p>" +'\n')
+            ele_res.append((elem.get_attribute("href"), elem.get_attribute("title")))
             contador += 1
             total += 1
 
@@ -166,23 +162,18 @@ while sig <= numero:
 
     time.sleep(2)
     driver.find_element(By.CLASS_NAME,"js-btn-next").click()
-    #print ("Página " + str (sig) + " de " + str(numero) + " filtrada." + "\n")
     progress(sig, numero, status='Filtrando página: ' + str(sig) + ' de ' + str(numero))
     time.sleep(2)
     sig +=1 
 
 else:
-    print ('\n' + "Terminado filtrado elempleo.com" + '\n')
+    print ('\n') #Separado pues la barra de progreso no se ve bien
+    print ("Filtradas " + str(contador) + " de " + str(total) + " Ofertas en elempleo.com" + '\n')
     
 #Resultados    
-print ("Filtradas " + str(contador) + " de " + str(total) + " Ofertas!" + '\n')
 tt2 = contador
 
 ####### COMPUTRABAJO INICIO ##########
-
-head2 = open('encabezado2.txt').read().splitlines()
-for itm in head2:
-    p.write(itm + '\n')
 
 sig = 1
 contador = 0
@@ -204,15 +195,7 @@ numeropunto = driver.find_element(By.XPATH,'/html/body/main/div[2]/div[2]/div[1]
 print(numeropunto + " Resultados en Computrabajo: " + "\n")
 numero = int(numeropunto.replace('.', ''))
 tt1 = numero + tt1
-
-#if numero%20 == 0:
-#    numero = int(numero/20)
-#else:
-#    numero = int(numero/20) + 1
-
 numero = int(math.floor(numero/20))
-
-print(str(numero) + " Páginas")
 
 while sig <= numero:
     
@@ -233,8 +216,7 @@ while sig <= numero:
         
         if res == False and enlace.find(me) == -1 and enlace != me3 and res2 == False:
 
-            p.write(linea)
-            p.write(elem.get_attribute("href") + '">' + elem.get_attribute("text") + "</a></span></p>" +'\n')
+            comp_res.append((elem.get_attribute("href"), elem.get_attribute("text")))
             total += 1
             contador += 1
 
@@ -248,24 +230,22 @@ while sig <= numero:
 #Click siguiente
 
     driver.find_elements(By.XPATH,'//*[@title="Siguiente"]')[0].click()
-    #print ("Página " + str(sig) + " de " + str(numero) + " filtrada." + "\n")
     progress(sig, numero, status='Filtrando página: ' + str(sig) + ' de ' + str(numero))
     sig +=1
     correct += 1
     time.sleep(2)
 
 else:
-    print ('\n' + "Terminado filtrado computrabajo.com" +'\n')
+    print ('\n') #Separado pues la barra de progreso no se ve bien
+    print ("Filtradas " + str(contador) + " de " + str(total-correct) + " Ofertas en computrabajo.com" +'\n')
 
-#Resultados   
- 
-print ("Filtradas " + str(contador) + " de " + str(total-correct) + " Ofertas!" +'\n')
+#Resultados    
 tt2 = contador + tt2
 print("Total: " + str(tt1) + " Resultados" + '\n')
 print("Filtrados: " + str(tt2) + " Resultados" + '\n')
-#Cierre
 
-p.close()
+page(ele_res,comp_res)
+
+#Cierre
 driver.close()
-webbrowser.open("results.html")
-time.sleep(300)
+webbrowser.open("Resultados.html")
