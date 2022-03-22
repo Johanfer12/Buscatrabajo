@@ -69,9 +69,10 @@ if col == 1:
 sal = int(input("Salario mínimo: 1 = >1m 2 = >1.5m: "))
 
 #Inicialización
-ele_res = list(tuple())
-comp_res = list(tuple())
-contador = 0
+tiempo_inicio = time.time() #Inicio de tiempo de ejecución
+ele_res = list(tuple()) #Lista de empresas de elempleo
+comp_res = list(tuple()) #Lista de empresas de computrabajo
+contador = 0 
 total = 0
 sig = 0
 x = 0
@@ -239,12 +240,16 @@ else:
     print ('\n') #Separado pues la barra de progreso no se ve bien
     print ("Filtradas " + str(contador) + " de " + str(total-correct) + " Ofertas en computrabajo.com" +'\n')
 
-#Resultados    
+#Resultados
+ 
 tt2 = contador + tt2
-print("Total: " + str(tt1) + " Resultados" + '\n')
-print("Filtrados: " + str(tt2) + " Resultados" + '\n')
-
 page(ele_res,comp_res)
+tiempo_fin = time.time() #Tiempo final
+tiempo_total = tiempo_fin - tiempo_inicio #tiempo total de ejecución  
+print("Total: " + str(tt1) + " Resultados" + '\n')
+print("Filtrados: " + str(tt2) + " Resultados" + " En " + str(round((tiempo_total/60),2)) + " minutos." + '\n')
+
+
 
 #Cierre
 driver.close()
