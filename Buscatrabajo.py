@@ -247,7 +247,7 @@ page(ele_res,comp_res)
 tiempo_fin = time.time() #Tiempo final
 tiempo_total = tiempo_fin - tiempo_inicio #tiempo total de ejecución  
 print("Total: " + str(tt1) + " Resultados" + '\n')
-print("Filtrados: " + str(tt2) + " Resultados" + " En " + str(round((tiempo_total/60),2)) + " minutos." + '\n')
+print("Filtrados: " + str(tt2) + " resultados" + " en " + str(round((tiempo_total/60),2)) + " minutos." + '\n')
 
 
 

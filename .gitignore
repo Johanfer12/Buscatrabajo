@@ -113,10 +113,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 *.lnk
-*.lnk
-*.lnk
-*.lnk
-*.ico
 JobSeeker.lnk
 History.sqlite
 whitelist.txt
