@@ -186,9 +186,6 @@ if sal == 1:
     driver.get('https://www.computrabajo.com.co/empleos-en-bogota-dc?sal=3&pubdate=3')
 else:
     driver.get('https://www.computrabajo.com.co/empleos-en-bogota-dc?sal=4&pubdate=3')
-
-#Notificaciones no
-#driver.find_element_by_xpath('/html/body/main/div[1]/div[2]/div/button[1]').click()
 time.sleep(1)
 
 #Calculo de resultados y páginas
