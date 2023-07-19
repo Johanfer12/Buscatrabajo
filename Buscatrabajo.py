@@ -21,7 +21,7 @@ template = env.get_template('template.html')
 
 def page(ele_res,comp_res):
   filename = ('Resultados.html')
-  with open(filename, 'w') as fh:
+  with open(filename, "w", encoding="utf-8") as fh:
       fh.write(template.render(
           elemp = ele_res,
           comput = comp_res,
@@ -45,7 +45,7 @@ def progress(count, total, status=''):
 #Cargar base de datos navegador para filtrar los ya visitados
 #C:\Users\[Usuario]\AppData\Local\Microsoft\Edge\User Data\Default\History #en el caso de Microsoft Edge#
 
-shutil.copyfile(r"C:\Users\Johan\AppData\Local\Microsoft\Edge\User Data\Default\History", "History.sqlite")
+shutil.copyfile(r"%USERPROFILE%\AppData\Local\Microsoft\Edge\User Data\Default\History", "History.sqlite")
 conn = sqlite3.connect("History.sqlite")
 cursor = conn.cursor()
 
@@ -101,7 +101,7 @@ time.sleep(1)
 driver.find_element(By.XPATH,'/html/body/div[10]/div/div[2]/a').click()
 
 #Arreglo del bug de no resultados
-driver.find_element(By.XPATH,'/html/body/header/div/div[2]/div[2]/div/form/div/button').click()
+driver.get('https://www.elempleo.com/co/ofertas-empleo/')
 driver.back()
 
 #Click Salario 1-1.5
@@ -118,7 +118,7 @@ driver.find_element(By.XPATH,'/html/body/div[8]/div[4]/div[2]/div[1]/div/div[1]/
 time.sleep(3)
 
 #Click Fecha
-driver.find_element(By.XPATH,'/html/body/div[8]/div[4]/div[2]/div[1]/div/div[3]/div/div[2]/label/input').click()
+driver.find_element(By.XPATH,'/html/body/div[8]/div[4]/div[2]/div[1]/div/div[4]/div/div[2]/label/input').click()
 time.sleep(3)
 
 #Calculo de resultados y páginas
@@ -189,7 +189,7 @@ else:
 time.sleep(1)
 
 #Calculo de resultados y páginas
-numeropunto = driver.find_element(By.XPATH,'/html/body/main/div[2]/div[2]/div[1]/div[1]/div[1]/h1/span').text
+numeropunto = driver.find_element(By.XPATH,'/html/body/main/div[4]/div[2]/div[1]/div[1]/div[1]/h1/span').text
 print(numeropunto + " Resultados en Computrabajo: " + "\n")
 numero = int(numeropunto.replace('.', ''))
 tt1 = numero + tt1
