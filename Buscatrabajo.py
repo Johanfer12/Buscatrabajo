@@ -1,19 +1,17 @@
+from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.service import Service
 from jinja2 import Environment, FileSystemLoader
 from selenium.webdriver.common.by import By
 from selenium import webdriver
 import webbrowser
 import unidecode
-import sqlite3
-import shutil
 import time
 import math
 import sys
 import os
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
 
 #directorio local
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -50,28 +48,13 @@ def progress(count, total, status=''):
     sys.stdout.write('[%s] %s%s ...%s\r' % (bar, percents, '%', status))
     sys.stdout.flush()
 
-#Cargar base de datos navegador para filtrar los ya visitados
-#C:\Users\[Usuario]\AppData\Local\Microsoft\Edge\User Data\Default\History #en el caso de Microsoft Edge#
-
-shutil.copyfile(r"C:\Users\johan\AppData\Local\Microsoft\Edge\User Data\Default\History", "History.sqlite")
-conn = sqlite3.connect("History.sqlite")
-cursor = conn.cursor()
-
-def consulta_db(empresa):
-    query = "SELECT url FROM urls WHERE url LIKE " + "'%" + empresa + "%'"
-    cursor.execute(query)
-    return cursor.fetchall()
-
-compdb = consulta_db(r"computrabajo.com.co/ofertas-de-trabajo")
-eledb = consulta_db(r"elempleo.com/co/ofertas-trabajo/")
-
 #Selección de sitio
 sitio = int(input("Sitio a buscar: 1 = Elempleo, 2 = Computrabajo, 3 = Ambos: "))
 
 #Inicialización
 tiempo_inicio = time.time() #Inicio de tiempo de ejecución
-ele_res = list(tuple()) #Lista de empresas de elempleo
-comp_res = list(tuple()) #Lista de empresas de computrabajo
+ele_res = [] #Lista de empresas de elempleo
+comp_res = [] #Lista de empresas de computrabajo
 contador = 0 
 total = 0
 sig = 1  # Contador de páginas
@@ -97,7 +80,7 @@ print('\n' + " Inicializando...")
 
 if sitio == 1 or sitio == 3:
     # Ir directamente a la URL con los filtros aplicados
-    driver.get('https://www.elempleo.com/co/ofertas-empleo/bogota?Salaries=15-2-millones:2-25-millones:25-3-millones:3-35-millones:35-4-millones&PublishDate=hoy')
+    driver.get('https://www.elempleo.com/co/ofertas-empleo/bogota?Salaries=15-2-millones:2-25-millones:25-3-millones:3-35-millones&PublishDate=hace-1-semana')
     time.sleep(3)
 
     # Click en el botón de cookies de elempleo
@@ -150,12 +133,7 @@ if sitio == 1 or sitio == 3:
             # Verificar si alguna palabra del filtro está en el texto normalizado
             res = any(palabra in texto_normalizado for palabra in filtrado)
      
-            #Verificar si url está en eledb:
-            if res == False:
-                url = elem.get_attribute("href")
-                res2 = any(url in s for s in eledb)
-          
-            if res == False and res2 == False:
+            if not res:
                 ele_res.append((elem.get_attribute("href"), elem.get_attribute("title")))
                 contador += 1
                 total += 1
@@ -240,24 +218,16 @@ if sitio == 2 or sitio == 3:
         
         #Filtrar ofertas
         for elem in links:
-
             fullstring = elem.get_attribute("text")
             res = any(ele in unidecode.unidecode(fullstring.replace('-', ' ').replace('   ', ' ').replace('/', ' ').replace('(', ' ').replace(')', ' ').replace(':', ' ').replace('  ', ' ').replace('*', ' ').lower()) for ele in filtrado)
             enlace = elem.get_attribute("href")
 
-            #Verificar si url está en eledb, con la condición de no estar en el filtro anterior, para ahorrar procesamiento.
-            if res == False:           
-                
-                res2 = any(enlace in s for s in compdb)
-            
-            if res == False and enlace.find(me) == -1 and enlace != me3 and res2 == False:
-
+            if not res and enlace.find(me) == -1 and enlace != me3:
                 comp_res.append((elem.get_attribute("href"), elem.get_attribute("text")))
                 total += 1
                 contador += 1
-
-            elif me in enlace  or enlace is me3:
-                x = 1
+            elif me in enlace or enlace == me3:
+                pass
             else:
                 total += 1
 
