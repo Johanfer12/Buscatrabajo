@@ -175,7 +175,8 @@ if sitio == 2 or sitio == 3:
     sig = 1
     contador = 0
     total = 0
-    numero_total = 0  # Inicializar variable para el total de ofertas
+    correct = 0
+    numero_total = 0
 
     # URL directa con filtros aplicados
     driver.get('https://co.computrabajo.com/empleos-en-bogota-dc?pubdate=7&sal=5')
@@ -224,12 +225,8 @@ if sitio == 2 or sitio == 3:
 
             if not res and enlace.find(me) == -1 and enlace != me3:
                 comp_res.append((elem.get_attribute("href"), elem.get_attribute("text")))
-                total += 1
                 contador += 1
-            elif me in enlace or enlace == me3:
-                pass
-            else:
-                total += 1
+            total += 1
 
         time.sleep(2)
 
@@ -246,16 +243,13 @@ if sitio == 2 or sitio == 3:
         
         progress(sig, total_paginas, status=f'Filtrando página: {sig} de {total_paginas}')
         sig += 1
-        correct += 1
-        time.sleep(2)
 
+    print('\n')
+    print(f"Filtradas {contador} de {total} Ofertas en computrabajo.com\n")
+    if sitio == 3:
+        tt2 = contador + tt2
     else:
-        print ('\n') #Separado pues la barra de progreso no se ve bien
-        print (f"Filtradas {contador} de {total-correct} Ofertas en computrabajo.com\n")
-        if sitio == 3:
-            tt2 = contador + tt2
-        else:
-            tt2 = contador
+        tt2 = contador
 
 #Resultados
 page(ele_res,comp_res)
