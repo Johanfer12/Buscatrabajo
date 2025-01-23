@@ -11,6 +11,9 @@ import time
 import math
 import sys
 import os
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 
 #directorio local
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -28,7 +31,12 @@ def page(ele_res,comp_res):
       ))
 #Cargar filtros de palabras desde archivo
 
-filtrado = open('filtro.txt').read().splitlines()
+filtrado = []
+with open('filtro.txt', 'r', encoding='utf-8') as f:
+    for line in f:
+        # Eliminar espacios en blanco y convertir a minúsculas
+        palabra = unidecode.unidecode(line.strip().lower())
+        filtrado.append(palabra)
 
 #Barra de progreso:
 
@@ -45,7 +53,7 @@ def progress(count, total, status=''):
 #Cargar base de datos navegador para filtrar los ya visitados
 #C:\Users\[Usuario]\AppData\Local\Microsoft\Edge\User Data\Default\History #en el caso de Microsoft Edge#
 
-shutil.copyfile(r"%USERPROFILE%\AppData\Local\Microsoft\Edge\User Data\Default\History", "History.sqlite")
+shutil.copyfile(r"C:\Users\johan\AppData\Local\Microsoft\Edge\User Data\Default\History", "History.sqlite")
 conn = sqlite3.connect("History.sqlite")
 cursor = conn.cursor()
 
@@ -57,16 +65,8 @@ def consulta_db(empresa):
 compdb = consulta_db(r"computrabajo.com.co/ofertas-de-trabajo")
 eledb = consulta_db(r"elempleo.com/co/ofertas-trabajo/")
 
-#Filtrar Call Center?
-
-col = int(input("Filtrar Call Center? (1=Si 0=No): "))
-if col == 1:
-    filtrado.append('call')
-    filtrado.append('center')
-
-#Salario mínimo
-
-sal = int(input("Salario mínimo: 1 = >1m 2 = >1.5m: "))
+#Selección de sitio
+sitio = int(input("Sitio a buscar: 1 = Elempleo, 2 = Computrabajo, 3 = Ambos: "))
 
 #Inicialización
 tiempo_inicio = time.time() #Inicio de tiempo de ejecución
@@ -74,8 +74,9 @@ ele_res = list(tuple()) #Lista de empresas de elempleo
 comp_res = list(tuple()) #Lista de empresas de computrabajo
 contador = 0 
 total = 0
-sig = 0
-x = 0
+sig = 1  # Contador de páginas
+numero = 0  # Número total de ofertas
+OFERTAS_POR_PAGINA = 21  # Número de ofertas por página
 correct = 0
 tt1 = 0
 tt2 = 0
@@ -85,7 +86,7 @@ options = webdriver.ChromeOptions()
 options.add_argument("--log-level=3")
 options.add_argument("--ignore-ssl-errors")
 options.add_argument('--ignore-certificate-errors-spki-list')
-options.add_argument('--headless')
+#options.add_argument('--headless')
 options.add_argument('--window-size=1280,800')
 s=Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=s, options=options)
@@ -94,159 +95,204 @@ print('\n' + " Inicializando...")
 
 ################ ELEMPLEO INICIO ################
 
-driver.get('https://www.elempleo.com/co/ofertas-empleo/bogota')
-time.sleep(1)
-
-#Click Cookies
-driver.find_element(By.XPATH,'/html/body/div[10]/div/div[2]/a').click()
-
-#Arreglo del bug de no resultados
-driver.get('https://www.elempleo.com/co/ofertas-empleo/')
-driver.back()
-
-#Click Salario 1-1.5
-if sal == 1:
-    driver.find_element(By.XPATH,'/html/body/div[8]/div[4]/div[2]/div[1]/div/div[1]/div/div[2]/label/input').click()
-time.sleep(2)
-
-#Click Salario 1.5-2
-driver.find_element(By.XPATH,'/html/body/div[8]/div[4]/div[2]/div[1]/div/div[1]/div/div[3]/label/input').click()
-time.sleep(2)
-
-#Click Salario 2-2.5
-driver.find_element(By.XPATH,'/html/body/div[8]/div[4]/div[2]/div[1]/div/div[1]/div/div[4]/label/input').click()
-time.sleep(3)
-
-#Click Fecha
-driver.find_element(By.XPATH,'/html/body/div[8]/div[4]/div[2]/div[1]/div/div[4]/div/div[2]/label/input').click()
-time.sleep(3)
-
-#Calculo de resultados y páginas
-
-numero = int(driver.find_element(By.XPATH,"/html/body/div[8]/div[2]/div/div/h2/span[1]/strong[3]").text)
-os.system('cls')
-print (str(numero) + " resultados encontrados en elempleo.com" + '\n')
-tt1 = numero
-numero = int(math.floor(numero/100))
-time.sleep(1)
-
-while sig <= numero:
-    
-    #Cargar más resultados
-    driver.find_element(By.XPATH,"/html/body/div[8]/div[4]/div[1]/div[3]/div/form/div/select/option[3]").click()
+if sitio == 1 or sitio == 3:
+    # Ir directamente a la URL con los filtros aplicados
+    driver.get('https://www.elempleo.com/co/ofertas-empleo/bogota?Salaries=15-2-millones:2-25-millones:25-3-millones:3-35-millones:35-4-millones&PublishDate=hoy')
     time.sleep(3)
 
-    #Buscar links de las ofertas
-    links = driver.find_elements(By.XPATH,'//a[contains(@href, "ofertas-trabajo")]')
-
-    #Filtrar ofertas
-    for elem in links:
-        
-        fullstring = elem.get_attribute("title")
-        res = any(ele in unidecode.unidecode(fullstring.replace('-', ' ').replace('   ', ' ').replace('/', ' ').replace('(', ' ').replace(')', ' ').replace(':', ' ').replace('  ', ' ').replace('*', ' ').lower()) for ele in filtrado)
- 
-        #Verificar si url está en eledb:
-        if res == False:
-            
-            url = elem.get_attribute("href")
-            res2 = any(url in s for s in eledb)
-      
-
-        if res == False and res2 == False:
-
-            ele_res.append((elem.get_attribute("href"), elem.get_attribute("title")))
-            contador += 1
-            total += 1
-
-        else:
-            total += 1
-
-    time.sleep(2)
-    driver.find_element(By.CLASS_NAME,"js-btn-next").click()
-    progress(sig, numero, status='Filtrando página: ' + str(sig) + ' de ' + str(numero))
-    time.sleep(2)
-    sig +=1 
-
-else:
-    print ('\n') #Separado pues la barra de progreso no se ve bien
-    print ("Filtradas " + str(contador) + " de " + str(total) + " Ofertas en elempleo.com" + '\n')
+    # Click en el botón de cookies de elempleo
+    try:
+        cookie_button = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.CLASS_NAME, "btnAcceptPolicyNavigationCO"))
+        )
+        driver.execute_script("arguments[0].click();", cookie_button)
+        print("Cookies aceptadas exitosamente en elempleo.com")
+    except TimeoutException:
+        print("No se encontró el banner de cookies o ya fue aceptado")
     
-#Resultados    
-tt2 = contador
+    time.sleep(3)
+
+    #Calculo de resultados y páginas
+    try:
+        total_results = driver.find_element(By.CLASS_NAME, "js-total-results").text.strip()
+        numero = int(total_results.replace('.', ''))
+        print(f"Número de ofertas encontradas: {numero}")
+        total_paginas = (numero // 50) + (1 if numero % 50 > 0 else 0)
+        print(f"Total de páginas a procesar: {total_paginas}")
+        tt1 = numero
+    except (AttributeError, ValueError) as e:
+        print("No se pudo obtener el número de resultados:", str(e))
+        numero = 50
+        total_paginas = 5
+
+    # Bucle principal
+    while sig <= total_paginas:
+        print(f"Procesando página {sig} de {total_paginas}")
+        
+        #Buscar links de las ofertas
+        links = driver.find_elements(By.XPATH,'//a[contains(@href, "ofertas-trabajo")]')
+
+        #Filtrar ofertas
+        for elem in links:
+            # Normalizar el texto del título (quitar acentos, convertir a minúsculas)
+            fullstring = elem.get_attribute("title")
+            texto_normalizado = unidecode.unidecode(
+                fullstring.lower()
+                .replace('-', ' ')
+                .replace('/', ' ')
+                .replace('(', ' ')
+                .replace(')', ' ')
+                .replace(':', ' ')
+                .replace('*', ' ')
+                .replace('  ', ' ')
+            )
+            
+            # Verificar si alguna palabra del filtro está en el texto normalizado
+            res = any(palabra in texto_normalizado for palabra in filtrado)
+     
+            #Verificar si url está en eledb:
+            if res == False:
+                url = elem.get_attribute("href")
+                res2 = any(url in s for s in eledb)
+          
+            if res == False and res2 == False:
+                ele_res.append((elem.get_attribute("href"), elem.get_attribute("title")))
+                contador += 1
+                total += 1
+            else:
+                total += 1
+
+        time.sleep(2)
+
+        # Verificar si hay más páginas antes de intentar navegar
+        try:
+            next_button = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "js-btn-next"))
+            )
+            # Verificar si estamos en la última página
+            if "disabled" in next_button.get_attribute("class"):
+                print("Llegamos a la última página")
+                break
+            
+            # Si no es la última página, hacer clic en siguiente
+            driver.execute_script("arguments[0].click();", next_button)
+            # Esperar a que la página se actualice
+            WebDriverWait(driver, 10).until(
+                lambda d: d.find_element(By.CSS_SELECTOR, "li.active a.js-page").get_attribute("data-page") == str(sig + 1)
+            )
+        except TimeoutException:
+            print("No se pudo navegar a la siguiente página")
+            break
+            
+        progress(sig, total_paginas, status='Filtrando página: ' + str(sig) + ' de ' + str(total_paginas))
+        sig += 1
+
+    print('\n')
+    print(f"Filtradas {contador} de {total} Ofertas en elempleo.com\n")
+    tt2 = contador
 
 ####### COMPUTRABAJO INICIO ##########
 
-sig = 1
-contador = 0
-total = 0
+if sitio == 2 or sitio == 3:
+    sig = 1
+    contador = 0
+    total = 0
+    numero_total = 0  # Inicializar variable para el total de ofertas
 
-#Filtro salario
+    # URL directa con filtros aplicados
+    driver.get('https://co.computrabajo.com/empleos-en-bogota-dc?pubdate=7&sal=5')
+    time.sleep(3)
 
-if sal == 1:
-    driver.get('https://www.computrabajo.com.co/empleos-en-bogota-dc?sal=3&pubdate=3')
-else:
-    driver.get('https://www.computrabajo.com.co/empleos-en-bogota-dc?sal=4&pubdate=3')
-time.sleep(1)
-
-#Calculo de resultados y páginas
-numeropunto = driver.find_element(By.XPATH,'/html/body/main/div[4]/div[2]/div[1]/div[1]/div[1]/h1/span').text
-print(numeropunto + " Resultados en Computrabajo: " + "\n")
-numero = int(numeropunto.replace('.', ''))
-tt1 = numero + tt1
-numero = int(math.floor(numero/20))
-
-while sig <= numero:
-    
-    #Buscar links de las ofertas
-    links = driver.find_elements(By.XPATH,'//a[contains(@href, "ofertas-de-trabajo")]')
-    
-    #Filtrar ofertas
-    for elem in links:
-
-        fullstring = elem.get_attribute("text")
-        res = any(ele in unidecode.unidecode(fullstring.replace('-', ' ').replace('   ', ' ').replace('/', ' ').replace('(', ' ').replace(')', ' ').replace(':', ' ').replace('  ', ' ').replace('*', ' ').lower()) for ele in filtrado)
-        enlace = elem.get_attribute("href")
-
-        #Verificar si url está en eledb, con la condición de no estar en el filtro anterior, para ahorrar procesamiento.
-        if res == False:           
-            
-            res2 = any(enlace in s for s in compdb)
+    # Click en el botón de cookies
+    try:
+        cookie_button = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "cc-dismiss"))
+        )
+        # Usar JavaScript para hacer clic
+        driver.execute_script("arguments[0].click();", cookie_button)
+        print("Cookies aceptadas exitosamente")
+    except TimeoutException:
+        print("No se encontró el banner de cookies o ya fue aceptado")
+    except Exception as e:
+        print(f"Error al intentar aceptar cookies: {str(e)}")
         
-        if res == False and enlace.find(me) == -1 and enlace != me3 and res2 == False:
+    time.sleep(2)  # Dar tiempo adicional después de aceptar las cookies
 
-            comp_res.append((elem.get_attribute("href"), elem.get_attribute("text")))
-            total += 1
-            contador += 1
+    #Calculo de resultados y páginas
+    try:
+        total_results = WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located((By.XPATH, "//h1[@class='title_page']/span[@class='fwB']"))
+        ).text
+        numero_total = int(total_results.replace('.', '').replace(' ', ''))
+        total_paginas = math.ceil(numero_total / 20)
+        print(f"Total de ofertas encontradas: {numero_total}")
+        print(f"Total de páginas a procesar: {total_paginas}")
+        tt1 = numero_total  # Guardar el total de ofertas
+    except TimeoutException:
+        print("No se pudo obtener el número de resultados")
+        total_paginas = 1
 
-        elif me in enlace  or enlace is me3:
-            x = 1
+    # Modificar el bucle while para usar total_paginas
+    while sig <= total_paginas:
+        print(f"Procesando página {sig} de {total_paginas}")
+        #Buscar links de las ofertas
+        links = driver.find_elements(By.CLASS_NAME, 'js-o-link')
+        
+        #Filtrar ofertas
+        for elem in links:
+
+            fullstring = elem.get_attribute("text")
+            res = any(ele in unidecode.unidecode(fullstring.replace('-', ' ').replace('   ', ' ').replace('/', ' ').replace('(', ' ').replace(')', ' ').replace(':', ' ').replace('  ', ' ').replace('*', ' ').lower()) for ele in filtrado)
+            enlace = elem.get_attribute("href")
+
+            #Verificar si url está en eledb, con la condición de no estar en el filtro anterior, para ahorrar procesamiento.
+            if res == False:           
+                
+                res2 = any(enlace in s for s in compdb)
+            
+            if res == False and enlace.find(me) == -1 and enlace != me3 and res2 == False:
+
+                comp_res.append((elem.get_attribute("href"), elem.get_attribute("text")))
+                total += 1
+                contador += 1
+
+            elif me in enlace  or enlace is me3:
+                x = 1
+            else:
+                total += 1
+
+        time.sleep(2)
+
+        #Click siguiente - actualizado con el nuevo selector
+        try:
+            next_button = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "span.buildLink[title='Siguiente']"))
+            )
+            driver.execute_script("arguments[0].click();", next_button)
+            time.sleep(2)
+        except TimeoutException:
+            print("No se pudo encontrar o hacer clic en el botón siguiente")
+            break
+        
+        progress(sig, total_paginas, status=f'Filtrando página: {sig} de {total_paginas}')
+        sig += 1
+        correct += 1
+        time.sleep(2)
+
+    else:
+        print ('\n') #Separado pues la barra de progreso no se ve bien
+        print (f"Filtradas {contador} de {total-correct} Ofertas en computrabajo.com\n")
+        if sitio == 3:
+            tt2 = contador + tt2
         else:
-            total += 1
-
-    time.sleep(2)
-
-#Click siguiente
-
-    driver.find_elements(By.XPATH,'//*[@title="Siguiente"]')[0].click()
-    progress(sig, numero, status='Filtrando página: ' + str(sig) + ' de ' + str(numero))
-    sig +=1
-    correct += 1
-    time.sleep(2)
-
-else:
-    print ('\n') #Separado pues la barra de progreso no se ve bien
-    print ("Filtradas " + str(contador) + " de " + str(total-correct) + " Ofertas en computrabajo.com" +'\n')
+            tt2 = contador
 
 #Resultados
- 
-tt2 = contador + tt2
 page(ele_res,comp_res)
-tiempo_fin = time.time() #Tiempo final
-tiempo_total = tiempo_fin - tiempo_inicio #tiempo total de ejecución  
-print("Total: " + str(tt1) + " Resultados" + '\n')
-print("Filtrados: " + str(tt2) + " resultados" + " en " + str(round((tiempo_total/60),2)) + " minutos." + '\n')
-
-
+tiempo_fin = time.time()
+tiempo_total = tiempo_fin - tiempo_inicio
+print(f"Total: {tt1} Resultados\n")
+print(f"Filtrados: {tt2} resultados en {round((tiempo_total/60),2)} minutos.\n")
 
 #Cierre
 driver.close()
