@@ -12,6 +12,9 @@ import time
 import math
 import sys
 import os
+import requests
+from bs4 import BeautifulSoup
+
 
 #directorio local
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -80,7 +83,7 @@ print('\n' + " Inicializando...")
 
 if sitio == 1 or sitio == 3:
     # Ir directamente a la URL con los filtros aplicados
-    driver.get('https://www.elempleo.com/co/ofertas-empleo/bogota?Salaries=15-2-millones:2-25-millones:25-3-millones:3-35-millones&PublishDate=hace-1-semana')
+    driver.get('https://www.elempleo.com/co/ofertas-empleo/bogota?Salaries=2-25-millones:25-3-millones:3-35-millones:35-4-millones&PublishDate=hace-1-semana')
     time.sleep(3)
 
     # Click en el botón de cookies de elempleo
@@ -100,13 +103,13 @@ if sitio == 1 or sitio == 3:
         total_results = driver.find_element(By.CLASS_NAME, "js-total-results").text.strip()
         numero = int(total_results.replace('.', ''))
         print(f"Número de ofertas encontradas: {numero}")
-        total_paginas = (numero // 50) + (1 if numero % 50 > 0 else 0)
+        total_paginas = math.ceil(numero / 50)
         print(f"Total de páginas a procesar: {total_paginas}")
         tt1 = numero
     except (AttributeError, ValueError) as e:
         print("No se pudo obtener el número de resultados:", str(e))
         numero = 50
-        total_paginas = 5
+        total_paginas = 1
 
     # Bucle principal
     while sig <= total_paginas:
@@ -154,10 +157,19 @@ if sitio == 1 or sitio == 3:
             
             # Si no es la última página, hacer clic en siguiente
             driver.execute_script("arguments[0].click();", next_button)
-            # Esperar a que la página se actualice
+            
+            # Esperar a que la nueva página se cargue
             WebDriverWait(driver, 10).until(
-                lambda d: d.find_element(By.CSS_SELECTOR, "li.active a.js-page").get_attribute("data-page") == str(sig + 1)
+                EC.staleness_of(next_button)  # Espera a que el botón anterior desaparezca
             )
+            
+            # Esperar a que los nuevos elementos estén presentes
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "li.active a.js-page"))
+            )
+            
+            time.sleep(1)  # Pequeña pausa adicional para asegurar la carga completa
+            
         except TimeoutException:
             print("No se pudo navegar a la siguiente página")
             break
@@ -172,77 +184,77 @@ if sitio == 1 or sitio == 3:
 ####### COMPUTRABAJO INICIO ##########
 
 if sitio == 2 or sitio == 3:
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+    base_url = 'https://co.computrabajo.com/empleos-en-bogota-dc'
+    params = {
+        'pubdate': '7',  # última semana
+        'sal': '5',      # rango salarial
+        'p': 1          # página
+    }
+    
     sig = 1
     contador = 0
     total = 0
-    correct = 0
-    numero_total = 0
-
-    # URL directa con filtros aplicados
-    driver.get('https://co.computrabajo.com/empleos-en-bogota-dc?pubdate=7&sal=5')
-    time.sleep(3)
-
-    # Click en el botón de cookies
+    
     try:
-        cookie_button = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "cc-dismiss"))
-        )
-        # Usar JavaScript para hacer clic
-        driver.execute_script("arguments[0].click();", cookie_button)
-        print("Cookies aceptadas exitosamente")
-    except TimeoutException:
-        print("No se encontró el banner de cookies o ya fue aceptado")
+        # Primera petición para obtener el total de resultados
+        response = requests.get(base_url, params=params, headers=headers)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # Obtener total de resultados
+        total_results = soup.select_one('h1.title_page span.fwB')
+        if total_results:
+            numero_total = int(total_results.text.replace('.', '').replace(' ', ''))
+            total_paginas = math.ceil(numero_total / 20)
+            print(f"Total de ofertas encontradas: {numero_total}")
+            print(f"Total de páginas a procesar: {total_paginas}")
+            tt1 = numero_total
+        else:
+            print("No se pudo obtener el número de resultados")
+            total_paginas = 1
+            
+        # Bucle principal
+        while sig <= total_paginas:
+            print(f"Procesando página {sig} de {total_paginas}")
+            
+            params['p'] = sig
+            response = requests.get(base_url, params=params, headers=headers)
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Buscar links de las ofertas
+            links = soup.select('a.js-o-link')
+            
+            # Filtrar ofertas
+            for elem in links:
+                fullstring = elem.text.strip()
+                enlace = elem.get('href')
+                
+                texto_normalizado = unidecode.unidecode(
+                    fullstring.lower()
+                    .replace('-', ' ')
+                    .replace('/', ' ')
+                    .replace('(', ' ')
+                    .replace(')', ' ')
+                    .replace(':', ' ')
+                    .replace('*', ' ')
+                    .replace('  ', ' ')
+                )
+                
+                res = any(palabra in texto_normalizado for palabra in filtrado)
+                
+                if not res and me not in enlace and enlace != me3:
+                    comp_res.append((enlace, fullstring))
+                    contador += 1
+                total += 1
+            
+            progress(sig, total_paginas, status=f'Filtrando página: {sig} de {total_paginas}')
+            time.sleep(1)  # Pequeña pausa entre peticiones
+            sig += 1
+            
     except Exception as e:
-        print(f"Error al intentar aceptar cookies: {str(e)}")
-        
-    time.sleep(2)  # Dar tiempo adicional después de aceptar las cookies
-
-    #Calculo de resultados y páginas
-    try:
-        total_results = WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located((By.XPATH, "//h1[@class='title_page']/span[@class='fwB']"))
-        ).text
-        numero_total = int(total_results.replace('.', '').replace(' ', ''))
-        total_paginas = math.ceil(numero_total / 20)
-        print(f"Total de ofertas encontradas: {numero_total}")
-        print(f"Total de páginas a procesar: {total_paginas}")
-        tt1 = numero_total  # Guardar el total de ofertas
-    except TimeoutException:
-        print("No se pudo obtener el número de resultados")
-        total_paginas = 1
-
-    # Modificar el bucle while para usar total_paginas
-    while sig <= total_paginas:
-        print(f"Procesando página {sig} de {total_paginas}")
-        #Buscar links de las ofertas
-        links = driver.find_elements(By.CLASS_NAME, 'js-o-link')
-        
-        #Filtrar ofertas
-        for elem in links:
-            fullstring = elem.get_attribute("text")
-            res = any(ele in unidecode.unidecode(fullstring.replace('-', ' ').replace('   ', ' ').replace('/', ' ').replace('(', ' ').replace(')', ' ').replace(':', ' ').replace('  ', ' ').replace('*', ' ').lower()) for ele in filtrado)
-            enlace = elem.get_attribute("href")
-
-            if not res and enlace.find(me) == -1 and enlace != me3:
-                comp_res.append((elem.get_attribute("href"), elem.get_attribute("text")))
-                contador += 1
-            total += 1
-
-        time.sleep(2)
-
-        #Click siguiente - actualizado con el nuevo selector
-        try:
-            next_button = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable((By.CSS_SELECTOR, "span.buildLink[title='Siguiente']"))
-            )
-            driver.execute_script("arguments[0].click();", next_button)
-            time.sleep(2)
-        except TimeoutException:
-            print("No se pudo encontrar o hacer clic en el botón siguiente")
-            break
-        
-        progress(sig, total_paginas, status=f'Filtrando página: {sig} de {total_paginas}')
-        sig += 1
+        print(f"Error durante el scraping: {str(e)}")
 
     print('\n')
     print(f"Filtradas {contador} de {total} Ofertas en computrabajo.com\n")
@@ -259,5 +271,4 @@ print(f"Total: {tt1} Resultados\n")
 print(f"Filtrados: {tt2} resultados en {round((tiempo_total/60),2)} minutos.\n")
 
 #Cierre
-driver.close()
 webbrowser.open("Resultados.html")

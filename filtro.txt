@@ -108,3 +108,32 @@ Licitacion
 Soacha 
 Tributario 
 Cartera
+Tienda
+Mercaimpulsador
+Impulsador
+Mensajero
+Motorizado
+Barranquilla
+Ing
+Moto
+Carro
+Interiores
+Avaluador 
+Ejecutivo comercial
+Ejecutivo de ventas
+Operador
+Operario
+Representante
+Nutricionista
+Nutricionistas
+Electricistas
+Electricista
+Optometra
+Portugues
+Frances 
+Abogado
+Biologo
+Microbiologo
+Cliente
+Clientes
+C2
