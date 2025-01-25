@@ -45,6 +45,7 @@ ul li::before {
 h2 {
   color: ECE0CD;
   font-size:40px;
+}
 
 </style>
 
@@ -62,15 +63,26 @@ h2 {
 </body>
  
 <ul>
-{% for result in elemp %}
-   <li <p><a href={{ result[0] }}> {{ result[1] }}</a></p></li>
+{% for link, title in elemp %}
+    <li><a href="{{ link }}" target="_blank">{{ title }}</a></li>
 {% endfor %}
 </ul>
+
+{% if tiene_computrabajo %}
+<div class="nav-section">
+    <a href="#computrabajo-section">Ir a resultados de Computrabajo</a>
+</div>
+{% endif %}
 
 <h2><p>Computrabajo</p></h2>
 
-<ul>
-{% for result in comput %}
-   <li <p><a href={{ result[0] }}> {{ result[1] }}</a></p></li>
-{% endfor %}
-</ul>
+{% if comput %}
+<div id="computrabajo-section">
+    <h2>Resultados de Computrabajo</h2>
+    <ul>
+    {% for link, title in comput %}
+        <li><a href="{{ link }}" target="_blank">{{ title }}</a></li>
+    {% endfor %}
+    </ul>
+</div>
+{% endif %}

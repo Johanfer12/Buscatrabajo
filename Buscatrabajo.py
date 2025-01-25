@@ -29,6 +29,7 @@ def page(ele_res,comp_res):
       fh.write(template.render(
           elemp = ele_res,
           comput = comp_res,
+          tiene_computrabajo = len(comp_res) > 0
       ))
 #Cargar filtros de palabras desde archivo
 
@@ -68,11 +69,12 @@ tt1 = 0
 tt2 = 0
 me = "www.computrabajo.com.co/empresas/"
 me3 = "https://www.computrabajo.com.co/ofertas-de-trabajo/"
+base_computrabajo = "https://co.computrabajo.com"  # Nueva variable para la base URL
 options = webdriver.ChromeOptions()
 options.add_argument("--log-level=3")
 options.add_argument("--ignore-ssl-errors")
 options.add_argument('--ignore-certificate-errors-spki-list')
-#options.add_argument('--headless')
+options.add_argument('--headless')
 options.add_argument('--window-size=1280,800')
 s=Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=s, options=options)
@@ -245,7 +247,8 @@ if sitio == 2 or sitio == 3:
                 res = any(palabra in texto_normalizado for palabra in filtrado)
                 
                 if not res and me not in enlace and enlace != me3:
-                    comp_res.append((enlace, fullstring))
+                    enlace_completo = base_computrabajo + enlace if not enlace.startswith('http') else enlace
+                    comp_res.append((enlace_completo, fullstring))
                     contador += 1
                 total += 1
             
