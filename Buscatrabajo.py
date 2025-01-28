@@ -117,35 +117,40 @@ if sitio == 1 or sitio == 3:
     while sig <= total_paginas:
         print(f"Procesando página {sig} de {total_paginas}")
         
-        #Buscar links de las ofertas
-        links = driver.find_elements(By.XPATH,'//a[contains(@href, "ofertas-trabajo")]')
+        # Obtener el HTML de la página actual y parsearlo con BeautifulSoup
+        page_source = driver.page_source
+        soup = BeautifulSoup(page_source, 'html.parser')
+        
+        # Buscar links de las ofertas usando BeautifulSoup
+        links = soup.find_all('a', href=lambda href: href and 'ofertas-trabajo' in href)
 
-        #Filtrar ofertas
+        # Filtrar ofertas
         for elem in links:
-            # Normalizar el texto del título (quitar acentos, convertir a minúsculas)
-            fullstring = elem.get_attribute("title")
-            texto_normalizado = unidecode.unidecode(
-                fullstring.lower()
-                .replace('-', ' ')
-                .replace('/', ' ')
-                .replace('(', ' ')
-                .replace(')', ' ')
-                .replace(':', ' ')
-                .replace('*', ' ')
-                .replace('  ', ' ')
-            )
+            # Obtener título y href del elemento
+            fullstring = elem.get('title')
+            href = elem.get('href')
             
-            # Verificar si alguna palabra del filtro está en el texto normalizado
-            res = any(palabra in texto_normalizado for palabra in filtrado)
-     
-            if not res:
-                ele_res.append((elem.get_attribute("href"), elem.get_attribute("title")))
-                contador += 1
-                total += 1
-            else:
-                total += 1
-
-        time.sleep(2)
+            if fullstring and href:  # Verificar que existan ambos atributos
+                texto_normalizado = unidecode.unidecode(
+                    fullstring.lower()
+                    .replace('-', ' ')
+                    .replace('/', ' ')
+                    .replace('(', ' ')
+                    .replace(')', ' ')
+                    .replace(':', ' ')
+                    .replace('*', ' ')
+                    .replace('  ', ' ')
+                )
+                
+                # Verificar si alguna palabra del filtro está en el texto normalizado
+                res = any(palabra in texto_normalizado for palabra in filtrado)
+         
+                if not res:
+                    ele_res.append((href, fullstring))
+                    contador += 1
+                    total += 1
+                else:
+                    total += 1
 
         # Verificar si hay más páginas antes de intentar navegar
         try:
@@ -162,7 +167,7 @@ if sitio == 1 or sitio == 3:
             
             # Esperar a que la nueva página se cargue
             WebDriverWait(driver, 10).until(
-                EC.staleness_of(next_button)  # Espera a que el botón anterior desaparezca
+                EC.staleness_of(next_button)
             )
             
             # Esperar a que los nuevos elementos estén presentes
@@ -170,7 +175,7 @@ if sitio == 1 or sitio == 3:
                 EC.presence_of_element_located((By.CSS_SELECTOR, "li.active a.js-page"))
             )
             
-            time.sleep(1)  # Pequeña pausa adicional para asegurar la carga completa
+            time.sleep(1)
             
         except TimeoutException:
             print("No se pudo navegar a la siguiente página")
