@@ -16,32 +16,30 @@ import requests
 from bs4 import BeautifulSoup
 
 
-#directorio local
+# Directorio local
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-#Creación de archivo html con Jinja2
-env = Environment( loader = FileSystemLoader(os.path.dirname(os.path.abspath(__file__))) )
+# Creación de archivo html con Jinja2
+env = Environment(loader=FileSystemLoader(os.path.dirname(os.path.abspath(__file__))))
 template = env.get_template('template.html')
 
-def page(ele_res,comp_res):
-  filename = ('Resultados.html')
-  with open(filename, "w", encoding="utf-8") as fh:
-      fh.write(template.render(
-          elemp = ele_res,
-          comput = comp_res,
-          tiene_computrabajo = len(comp_res) > 0
-      ))
-#Cargar filtros de palabras desde archivo
+def page(ele_res, comp_res):
+    filename = 'Resultados.html'
+    with open(filename, "w", encoding="utf-8") as fh:
+        fh.write(template.render(
+            elemp=ele_res,
+            comput=comp_res,
+            tiene_computrabajo=len(comp_res) > 0
+        ))
 
+# Cargar filtros de palabras desde archivo
 filtrado = []
 with open('filtro.txt', 'r', encoding='utf-8') as f:
     for line in f:
-        # Eliminar espacios en blanco y convertir a minúsculas
         palabra = unidecode.unidecode(line.strip().lower())
         filtrado.append(palabra)
 
-#Barra de progreso:
-
+# Barra de progreso:
 def progress(count, total, status=''):
     bar_len = 60
     filled_len = int(round(bar_len * count / float(total)))
@@ -52,43 +50,40 @@ def progress(count, total, status=''):
     sys.stdout.write('[%s] %s%s ...%s\r' % (bar, percents, '%', status))
     sys.stdout.flush()
 
-#Selección de sitio
+# Selección de sitio
 sitio = int(input("Sitio a buscar: 1 = Elempleo, 2 = Computrabajo, 3 = Ambos: "))
 
-#Inicialización
-tiempo_inicio = time.time() #Inicio de tiempo de ejecución
-ele_res = [] #Lista de empresas de elempleo
-comp_res = [] #Lista de empresas de computrabajo
-contador = 0 
-total = 0
-sig = 1  # Contador de páginas
-numero = 0  # Número total de ofertas
-OFERTAS_POR_PAGINA = 21  # Número de ofertas por página
-correct = 0
-tt1 = 0
-tt2 = 0
-me = "www.computrabajo.com.co/empresas/"
-me3 = "https://www.computrabajo.com.co/ofertas-de-trabajo/"
-base_computrabajo = "https://co.computrabajo.com"  # Nueva variable para la base URL
+# Inicialización
+tiempo_inicio = time.time()
+ele_res = []  # Lista de ofertas válidas en elempleo
+comp_res = []  # Lista de ofertas válidas en computrabajo
+
+# Estas dos variables son las que nos interesan para el reporte final:
+total_ofertas_encontradas = 0
+total_ofertas_filtradas = 0
+
 options = webdriver.ChromeOptions()
 options.add_argument("--log-level=3")
 options.add_argument("--ignore-ssl-errors")
 options.add_argument('--ignore-certificate-errors-spki-list')
 options.add_argument('--headless')
 options.add_argument('--window-size=1280,800')
-s=Service(ChromeDriverManager().install())
+s = Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=s, options=options)
-os.system('cls')
+
+os.system('cls' if os.name == 'nt' else 'clear')
 print('\n' + " Inicializando...")
 
-################ ELEMPLEO INICIO ################
-
+############## SCRAPING DE ELEMPEO ##############
 if sitio == 1 or sitio == 3:
-    # Ir directamente a la URL con los filtros aplicados
-    driver.get('https://www.elempleo.com/co/ofertas-empleo/bogota?Salaries=2-25-millones:25-3-millones:3-35-millones:35-4-millones&PublishDate=hace-1-semana')
+    contador_elempleo = 0
+    total_elempleo = 0
+    
+    # Ir directamente a la URL con filtros aplicados
+    driver.get('https://www.elempleo.com/co/ofertas-empleo/?Salaries=45-55-millones:55-6-millones:6-8-millones&PublishDate=hoy')
     time.sleep(3)
 
-    # Click en el botón de cookies de elempleo
+    # Aceptar cookies
     try:
         cookie_button = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.CLASS_NAME, "btnAcceptPolicyNavigationCO"))
@@ -100,37 +95,32 @@ if sitio == 1 or sitio == 3:
     
     time.sleep(3)
 
-    #Calculo de resultados y páginas
+    # Calcular número total de resultados
     try:
         total_results = driver.find_element(By.CLASS_NAME, "js-total-results").text.strip()
-        numero = int(total_results.replace('.', ''))
-        print(f"Número de ofertas encontradas: {numero}")
-        total_paginas = math.ceil(numero / 50)
-        print(f"Total de páginas a procesar: {total_paginas}")
-        tt1 = numero
+        numero_elempleo = int(total_results.replace('.', ''))
+        print(f"Número de ofertas encontradas (elempleo): {numero_elempleo}")
+        total_paginas_elempleo = math.ceil(numero_elempleo / 50)
+        print(f"Total de páginas a procesar (elempleo): {total_paginas_elempleo}")
     except (AttributeError, ValueError) as e:
-        print("No se pudo obtener el número de resultados:", str(e))
-        numero = 50
-        total_paginas = 1
+        print("No se pudo obtener el número de resultados en elempleo:", str(e))
+        numero_elempleo = 50
+        total_paginas_elempleo = 1
 
-    # Bucle principal
-    while sig <= total_paginas:
-        print(f"Procesando página {sig} de {total_paginas}")
+    # Navegar por las páginas
+    pagina_actual = 1
+    while pagina_actual <= total_paginas_elempleo:
+        print(f"Procesando página {pagina_actual} de {total_paginas_elempleo} en elempleo")
         
-        # Obtener el HTML de la página actual y parsearlo con BeautifulSoup
-        page_source = driver.page_source
-        soup = BeautifulSoup(page_source, 'html.parser')
-        
-        # Buscar links de las ofertas usando BeautifulSoup
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
         links = soup.find_all('a', href=lambda href: href and 'ofertas-trabajo' in href)
 
-        # Filtrar ofertas
+        # Filtrar cada oferta
         for elem in links:
-            # Obtener título y href del elemento
             fullstring = elem.get('title')
             href = elem.get('href')
             
-            if fullstring and href:  # Verificar que existan ambos atributos
+            if fullstring and href:
                 texto_normalizado = unidecode.unidecode(
                     fullstring.lower()
                     .replace('-', ' ')
@@ -142,98 +132,91 @@ if sitio == 1 or sitio == 3:
                     .replace('  ', ' ')
                 )
                 
-                # Verificar si alguna palabra del filtro está en el texto normalizado
-                res = any(palabra in texto_normalizado for palabra in filtrado)
+                # Verificamos si alguna palabra del filtro está en la oferta
+                descartar = any(palabra in texto_normalizado for palabra in filtrado)
          
-                if not res:
-                    ele_res.append((href, fullstring))
-                    contador += 1
-                    total += 1
-                else:
-                    total += 1
+                if not descartar:
+                    full_url = f"https://www.elempleo.com{href}" if not href.startswith('http') else href
+                    ele_res.append((full_url, fullstring))
+                    contador_elempleo += 1
+                total_elempleo += 1
 
-        # Verificar si hay más páginas antes de intentar navegar
+        # Ir a la siguiente página
         try:
             next_button = WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "js-btn-next"))
             )
-            # Verificar si estamos en la última página
             if "disabled" in next_button.get_attribute("class"):
-                print("Llegamos a la última página")
+                print("Última página de elempleo")
                 break
             
-            # Si no es la última página, hacer clic en siguiente
             driver.execute_script("arguments[0].click();", next_button)
-            
-            # Esperar a que la nueva página se cargue
-            WebDriverWait(driver, 10).until(
-                EC.staleness_of(next_button)
-            )
-            
-            # Esperar a que los nuevos elementos estén presentes
+            WebDriverWait(driver, 10).until(EC.staleness_of(next_button))
             WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "li.active a.js-page"))
             )
-            
             time.sleep(1)
             
         except TimeoutException:
-            print("No se pudo navegar a la siguiente página")
+            print("No se pudo navegar a la siguiente página de elempleo")
             break
             
-        progress(sig, total_paginas, status='Filtrando página: ' + str(sig) + ' de ' + str(total_paginas))
-        sig += 1
+        progress(pagina_actual, total_paginas_elempleo, status=f'Elempleo (página {pagina_actual})')
+        pagina_actual += 1
 
-    print('\n')
-    print(f"Filtradas {contador} de {total} Ofertas en elempleo.com\n")
-    tt2 = contador
+    print(f"\nFiltradas {contador_elempleo} de {total_elempleo} Ofertas en elempleo.com\n")
+    
+    # Sumar al global
+    total_ofertas_encontradas += total_elempleo
+    total_ofertas_filtradas += contador_elempleo
 
-####### COMPUTRABAJO INICIO ##########
-
+############## SCRAPING DE COMPUTRABAJO ##############
 if sitio == 2 or sitio == 3:
+    contador_computrabajo = 0
+    total_computrabajo = 0
+    
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                      'Chrome/91.0.4472.124 Safari/537.36'
     }
     base_url = 'https://co.computrabajo.com/empleos-en-bogota-dc'
     params = {
-        'pubdate': '7',  # última semana
-        'sal': '5',      # rango salarial
-        'p': 1          # página
+        'pubdate': '7',  # semana
+        'sal': '15',     # rango salarial
+        'p': 1           # página
     }
-    
-    sig = 1
-    contador = 0
-    total = 0
+    base_computrabajo = "https://co.computrabajo.com"
+    me = "www.computrabajo.com.co/empresas/"
+    me3 = "https://www.computrabajo.com.co/ofertas-de-trabajo/"
     
     try:
-        # Primera petición para obtener el total de resultados
+        # Petición inicial para obtener total de ofertas
         response = requests.get(base_url, params=params, headers=headers)
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # Obtener total de resultados
+        # Total de ofertas
         total_results = soup.select_one('h1.title_page span.fwB')
         if total_results:
-            numero_total = int(total_results.text.replace('.', '').replace(' ', ''))
-            total_paginas = math.ceil(numero_total / 20)
-            print(f"Total de ofertas encontradas: {numero_total}")
-            print(f"Total de páginas a procesar: {total_paginas}")
-            tt1 = numero_total
+            numero_ct = int(total_results.text.replace('.', '').replace(' ', ''))
+            total_paginas_ct = math.ceil(numero_ct / 20)
+            print(f"Total de ofertas encontradas (Computrabajo): {numero_ct}")
+            print(f"Total de páginas a procesar (Computrabajo): {total_paginas_ct}")
         else:
-            print("No se pudo obtener el número de resultados")
-            total_paginas = 1
+            print("No se pudo obtener el número de resultados en Computrabajo")
+            numero_ct = 20
+            total_paginas_ct = 1
             
-        # Bucle principal
-        while sig <= total_paginas:
-            print(f"Procesando página {sig} de {total_paginas}")
+        pagina_actual = 1
+        while pagina_actual <= total_paginas_ct:
+            print(f"Procesando página {pagina_actual} de {total_paginas_ct} en Computrabajo")
             
-            params['p'] = sig
+            params['p'] = pagina_actual
             response = requests.get(base_url, params=params, headers=headers)
             soup = BeautifulSoup(response.text, 'html.parser')
             
-            # Buscar links de las ofertas
+            # Buscar ofertas
             links = soup.select('a.js-o-link')
             
-            # Filtrar ofertas
             for elem in links:
                 fullstring = elem.text.strip()
                 enlace = elem.get('href')
@@ -249,34 +232,45 @@ if sitio == 2 or sitio == 3:
                     .replace('  ', ' ')
                 )
                 
-                res = any(palabra in texto_normalizado for palabra in filtrado)
+                descartar = any(palabra in texto_normalizado for palabra in filtrado)
                 
-                if not res and me not in enlace and enlace != me3:
+                # Evitar enlaces a "empresas" o enlaces vacíos
+                if not descartar and me not in enlace and enlace != me3:
                     enlace_completo = base_computrabajo + enlace if not enlace.startswith('http') else enlace
                     comp_res.append((enlace_completo, fullstring))
-                    contador += 1
-                total += 1
+                    contador_computrabajo += 1
+                total_computrabajo += 1
             
-            progress(sig, total_paginas, status=f'Filtrando página: {sig} de {total_paginas}')
-            time.sleep(1)  # Pequeña pausa entre peticiones
-            sig += 1
+            progress(pagina_actual, total_paginas_ct, status=f'Computrabajo (página {pagina_actual})')
+            time.sleep(1)
+            pagina_actual += 1
             
     except Exception as e:
-        print(f"Error durante el scraping: {str(e)}")
+        print(f"Error durante el scraping en Computrabajo: {str(e)}")
 
-    print('\n')
-    print(f"Filtradas {contador} de {total} Ofertas en computrabajo.com\n")
-    if sitio == 3:
-        tt2 = contador + tt2
-    else:
-        tt2 = contador
+    print(f"\nFiltradas {contador_computrabajo} de {total_computrabajo} Ofertas en computrabajo.com\n")
+    
+    # Sumar al global
+    total_ofertas_encontradas += total_computrabajo
+    total_ofertas_filtradas += contador_computrabajo
 
-#Resultados
-page(ele_res,comp_res)
+############## GENERAR EL HTML ##############
+page(ele_res, comp_res)
+
+# Tiempo total
 tiempo_fin = time.time()
 tiempo_total = tiempo_fin - tiempo_inicio
-print(f"Total: {tt1} Resultados\n")
-print(f"Filtrados: {tt2} resultados en {round((tiempo_total/60),2)} minutos.\n")
 
-#Cierre
+# Resultados combinados
+print(f"Total: {total_ofertas_encontradas} Resultados\n")
+print(f"Filtrados: {total_ofertas_filtradas} resultados en {round((tiempo_total/60), 2)} minutos.\n")
+
+# Si se escoge la opción 3, se muestra un resumen total
+if sitio == 3:
+    print("\nResumen Total:")
+    print(f"Filtradas {total_ofertas_filtradas} de {total_ofertas_encontradas} Ofertas en total")
+else:
+    print(f"Filtradas {total_ofertas_filtradas} de {total_ofertas_encontradas} Ofertas en total")
+
+# Abrir el archivo HTML al final
 webbrowser.open("Resultados.html")
