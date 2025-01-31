@@ -238,3 +238,10 @@ carpintero
 estimador
 hora
 estimadora
+siniestro
+coordinador
+venta
+comercial
+Especialista
+Capitan
+costos
